@@ -8,10 +8,11 @@ def process_array(num, arr):
     print("\nProcessing Array({}): \n\n".format(num))
     print(arr)
     print("\nOdds output:\n")
-    # Note: use the arr variable; don't directly refer to a1-a4 variables
-    # TODO add necessary print statement to output only the odd values (hint, best if shown as a single line)
-    
 
+    for i in arr:                   # UCID: krs
+        if i % 2 != 0:              # Date: 9/21/23
+            print(i, end=' ')       # For loop to parse through each value in the array. 
+    print("\n")                     # Finding modulus of numbers in array and if-loop to print only odd values that meet the condition.
 
 print("Problem 1")
 process_array(1, a1)

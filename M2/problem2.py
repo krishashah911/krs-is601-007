@@ -8,9 +8,12 @@ def process_array(num, arr):
     print("\nProcessing Array({}): \n\n".format(num))
     print(arr)
     total = 0.00
-    # Note: use the arr variable; don't directly refer to a1-a4 variables
-    # TODO add necessary code here for sum; every number must have two decimal places shown (i.e., 0.10, 0.01, 0.00)
-    print("\nThe total is {}:\n".format(total))
+                                    # UCID: krs
+                                    # Date: 9/21/23
+    total = round(sum(arr), 2)      # Finding the sum of each array called below.
+    total = "{:.2f}".format(total)  # Make sure to print in the format with two digits after decimal.
+
+    print("\nThe total is {} \n".format(total))
 
 
 print("Problem 2")

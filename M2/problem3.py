@@ -8,9 +8,19 @@ def process_array(num, arr):
     print("\nProcessing Array({}): \n\n".format(num))
     print(arr)
     print("\nPositive Output:\n")
-    # Note: use the arr variable; don't directly refer to a1-a4 variables
-    # TODO add new code here to print the desired result
-    # TODO include the type() of the output data to ensure the result is positive AND the same datatype as the input value
+
+    p_arr = []                                  # UCID: krs
+                                                # Date: 9/21/23
+    
+    for item in arr:                            # For-loop to iterate through elements of array.
+        if isinstance(item, (int, float)):     
+            p_arr.append(abs(item))             # Take the absolute value and append it to new positive array.
+        else:
+            p_arr.append(str(abs(int(item))))   # Convert to integer, take the absolute value, and convert back to string and append.
+    
+    print(p_arr)
+
+    print(type(p_arr[0]))    # type() of the output data to ensure the result is positive AND the same datatype as the input value
 
 
 print("Problem 3")
