@@ -102,6 +102,11 @@ def process_update(index):
 
 def update_task(index: int, name: str, description:str, due: str):
     """ Updates the name, description , due date of a task found by index if an update to the property was provided """
+    """ 
+        UCID: krs
+        Date: 09/26/2023
+        Solution:   Check if name, description or due have been updated for the index task given. Update it in the original task.
+    """ 
     index = index 
     if index >=0 and index < len(tasks): # consider index out of bounds scenarios
         task = tasks[index]              # find the task by index
@@ -127,14 +132,23 @@ def update_task(index: int, name: str, description:str, due: str):
 
 def mark_done(index):
     """ Updates a single task, via index, to a done datetime"""
-    # find task from list by index
-    # consider index out of bounds scenarios and include appropriate message(s) for invalid index
-    # if it's not currently marked as done, record the current datetime as the value (don't just set it as true)
-    # if it is currently done, print a message saying it's already been completed
-    # make sure save() is still called last in this function
-    # include your ucid and date as a comment of when you implemented this, briefly summarize the solution
+    """ 
+        UCID: krs
+        Date: 09/26/2023
+        Solution:   Check if task_done in the template is False. If yes then update it with current datetime. Later if we try 
+                    to mark the same task it shows that it has already been completed. 
+    """ 
+    index = index 
+    if index >=0 and index < len(tasks):            # consider index out of bounds scenarios   
+        task = tasks[index]                         # find task from list by index
+        if not task['done']:
+            task['done'] = datetime.now()           # if it's not currently marked as done, record the current datetime as the value
+        else:
+            print("It's already been completed")    # if it is currently done, print a message saying it's already been completed
+    else:
+        print("Invalid Index Value")                # include appropriate message(s) for invalid index
 
-    save()
+    save()                                      # make sure save() is still called last in this function
 
 def view_task(index):
     """ View more info about a specific task fetch by index """
@@ -145,11 +159,9 @@ def view_task(index):
                     it further prints the task name, desc and due date. Else, prints an invalid statement
     """
     index = index 
-    if index >=0 and index < len(tasks):
-    # consider index out of bounds scenarios and include appropriate message(s) for invalid index   
-    # utilize the given print statement when a task is found
-    
-        task = tasks[index]     # find task from list by index
+    if index >=0 and index < len(tasks):            # consider index out of bounds scenarios
+        task = tasks[index]                         # find task from list by index
+                                                    # utilize the given print statement when a task is found
         print(f"""
             [{'x' if task['done'] else ' '}] Task: {task['name']}\n 
             Description: {task['description']} \n 
@@ -158,7 +170,7 @@ def view_task(index):
             Completed: {task['done'] if task['done'] else '-'} \n
             """.replace('  ', ' '))
     else:
-        print("Invalid Index Value")
+        print("Invalid Index Value")                # include appropriate message(s) for invalid index 
 
 
 def delete_task(index):
@@ -180,11 +192,13 @@ def delete_task(index):
 
 def get_incomplete_tasks():
     """ prints a list of tasks that are not done """
-    # generate a list of tasks where the task is not done
-    # pass that list into list_tasks()
-    # include your ucid and date as a comment of when you implemented this, briefly summarize the solution
-    _tasks = [] # <-- this is a placeholder to populate based on the above requirements
-    list_tasks(_tasks)
+    """ 
+        UCID: krs
+        Date: 09/26/2023
+        Solution:   The below code checks if any task within tasks has task_done as "False". Prints all incomplete task. 
+    """
+    _tasks = [task for task in tasks if not task['done']]   # generate a list of tasks where the task is not done 
+    list_tasks(_tasks)                                      # pass that list into list_tasks()
 
 def get_overdue_tasks():
     """ prints a list of tasks that are over due completion (not done and expired) """
