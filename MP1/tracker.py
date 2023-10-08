@@ -116,10 +116,10 @@ def update_task(index: int, name: str, description:str, due: str):
             if len(description) != 0:
                 task['description'] = description
                 if len(due) != 0:
-                    try:
-                        task['due'] = str_to_datetime(due)
-                    except ValueError as e:
-                        print(f"Date Format Invalid: {e}")
+                    # try:
+                    task['due'] = str_to_datetime(due)
+                    # except ValueError as e:
+                    #     print(f"Date Format Invalid: {e}")
         if (len(name)==0 and len(description)==0 and len(due)==0):
             print("No data to update") 
         else:
@@ -202,24 +202,58 @@ def get_incomplete_tasks():
 
 def get_overdue_tasks():
     """ prints a list of tasks that are over due completion (not done and expired) """
+    """ 
+        UCID: krs
+        Date: 09/26/2023
+        Solution:   The below code checks if any task within tasks has task_done as "False" and due date earlier than current date.
+                    Later print all overdue tasks. 
+    """
+    current_datetime = datetime.now()  
     # generate a list of tasks where the due date is older than "now" and that are not complete (i.e., not done)
-    # pass that list into list_tasks()
-    # include your ucid and date as a comment of when you implemented this, briefly summarize the solution
-    _tasks = [] # <-- this is a placeholder to populate based on the above requirements
-    list_tasks(_tasks)
+    _tasks = [task for task in tasks if not task['done'] and str_to_datetime(task['due']) < current_datetime]
+    list_tasks(_tasks)                  # pass that list into list_tasks()
+
 
 def get_time_remaining(index):
     """ outputs the number of days, hours, minutes, seconds a task has before it's overdue otherwise shows similar info for how far past due it is """
-    # get the task by index
-    # consider index out of bounds scenarios and include appropriate message(s) for invalid index
-    # get the days, hours, minutes, seconds between the due date and now
-    # display the remaining time via print in a clear format showing X days, X hours, X minutes, X seconds (time components must be clearly separated)
-    # example: 1 day, 0 hours, 0 minutes, 0 seconds remaining
-    # if the due date is in the past print out how many days, hours, minutes, seconds the task is overdue (clearly note that it's overdue, values should be positive)
-    # example: 0 days, 2 hours, 5 minutes, 10 seconds overdue (note there's no negative values)
-    # include your ucid and date as a comment of when you implemented this, briefly summarize the solution
-    task = {}# <-- this is a placeholder to populate based on the above requirements
-    # do your print logic here
+    """ 
+        UCID: krs
+        Date: 10/08/2023
+        Solution:   The below code checks the due date of task if remaining and then calculate time using current time and duedate time.
+                    If any task is already done then it just shows task already completed or else prints the due time. 
+                    Time difference is calculated by subtracting due time from current time or vice versa if the task is due.                 
+    """
+    current_datetime = datetime.now() 
+    if index >=0 and index < len(tasks):            # get the task by index
+        task = tasks[index]
+
+        if task['done']:
+            print("Task Completed already")
+        else:
+            due_datetime = str_to_datetime(task['due'])
+            if due_datetime > current_datetime:         # get the days, hours, minutes, seconds between the due date and now
+                time_difference = due_datetime - current_datetime
+                days = time_difference.days
+                seconds = time_difference.seconds
+                hours, seconds = divmod(seconds, 3600)
+                minutes, seconds = divmod(seconds, 60)               
+                # display the remaining time via print in a clear format showing X days, X hours, X minutes, X seconds
+                # example: 1 day, 0 hours, 0 minutes, 0 seconds remaining
+                remaining_time = f"{days} days, {hours} hours, {minutes} minutes, {seconds} seconds remaining"
+                print(remaining_time)
+            else:
+                time_difference = current_datetime - due_datetime
+                days = time_difference.days
+                seconds = time_difference.seconds
+                hours, seconds = divmod(seconds, 3600)
+                minutes, seconds = divmod(seconds, 60)
+                # if the due date is in the past print out how many days, hours, minutes, seconds the task is overdue
+                # example: 0 days, 2 hours, 5 minutes, 10 seconds overdue (note there's no negative values)
+                overdue_time = f"{days} days, {hours} hours, {minutes} minutes, {seconds} seconds overdue"
+                print(overdue_time)
+            
+    else:
+        print("Invalid Index Value")  # consider index out of bounds scenarios and include appropriate message(s) for invalid index
 
 # no changes needed below this line
 

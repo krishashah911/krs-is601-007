@@ -1,9 +1,9 @@
 [
     {
-        "name": "grocery",
-        "due": "2023-09-26 15:34:45",
-        "lastActivity": "2023-09-26 15:55:37.543506",
-        "description": "bread",
+        "name": "Grocery",
+        "due": "2023-10-10 13:23:23",
+        "lastActivity": "2023-10-08 18:38:38.426694",
+        "description": "milk",
         "done": false
     },
     {
@@ -12,5 +12,19 @@
         "lastActivity": "2023-09-26 19:38:50.178562",
         "description": "assignment2",
         "done": "2023-09-26 20:10:18.563820"
+    },
+    {
+        "name": "Cooking",
+        "due": "2023-09-26 22:26:26",
+        "lastActivity": "2023-09-26 20:26:20.668091",
+        "description": "dinner",
+        "done": false
+    },
+    {
+        "name": "Gaming",
+        "due": "2023-10-09 18:23:12",
+        "lastActivity": "2023-10-08 18:23:45.485688",
+        "description": "Write a code",
+        "done": false
     }
 ]
