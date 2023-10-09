@@ -116,10 +116,10 @@ def update_task(index: int, name: str, description:str, due: str):
             if len(description) != 0:
                 task['description'] = description
                 if len(due) != 0:
-                    # try:
-                    task['due'] = str_to_datetime(due)
-                    # except ValueError as e:
-                    #     print(f"Date Format Invalid: {e}")
+                    try:
+                        task['due'] = str_to_datetime(due)
+                    except ValueError as e:
+                        print(f"Date Format Invalid: {e}")
         if (len(name)==0 and len(description)==0 and len(due)==0):
             print("No data to update") 
         else:
