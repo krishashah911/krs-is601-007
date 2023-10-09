@@ -1,6 +1,6 @@
 <table><tr><td> <em>Assignment: </em> IS601 - Mini Project 1 - Tracker App</td></tr>
 <tr><td> <em>Student: </em> Krisha Shah (krs)</td></tr>
-<tr><td> <em>Generated: </em> 10/8/2023 10:52:27 PM</td></tr>
+<tr><td> <em>Generated: </em> 10/9/2023 5:15:50 PM</td></tr>
 <tr><td> <em>Grading Link: </em> <a rel="noreferrer noopener" href="https://learn.ethereallab.app/homework/IS601-007-F23/is601-mini-project-1-tracker-app/grade/krs" target="_blank">Grading</a></td></tr></table>
 <table><tr><td> <em>Instructions: </em> <ol><li>Checkout dev branch and pull any pending changes&nbsp;</li><ol><li>&nbsp;git checkout dev</li><li>&nbsp;git pull origin dev</li></ol><li>Create a new branch for this assignment (see Desired Branch Name)</li><ol><li>git checkout -b MP1-Tracker</li></ol><li>Create a new folder called MP1 in your local repository</li><li>Create a new file called tracker.py</li><li>Copy/paste the content from this template:&nbsp;&nbsp;<a href="https://gist.github.com/MattToegel/380e6baa24f6c25b74bf2ce99ccba6da">https://gist.github.com/MattToegel/380e6baa24f6c25b74bf2ce99ccba6da</a></li><li>Add/commit/push the template file</li><ol><li>git add --all</li><li>git commit -m "adding template"</li><li>git push origin MP1-Tracker</li></ol><li>Create a pull request from MP1-Tracker to dev (keep it open, do not close it until you're done)</li><li>Solve the various todo items (also noted below in the deliverables) and fill in the evidence</li><ol><li>Periodically add/commit; recommended after each solved item or every few items</li></ol><li>Save and copy/download the markdown</li><li>Create a new file mp1-submission.md in the MP1 folder</li><li>Add the markdown content</li><li>add/commit/push all the pending files for this assignment (tracker.py and mp1-submission.md)</li><li>If everything looks good on the pull request complete the merge</li><li>Create a new pull request from dev to prod and merge it to update prod (not used yet but you want to keep this up to date)</li><li>checkout dev locally and pull the changes to be up to date</li><li>Navigate to the prod branch on github and find the mp1-submission.md file and get the link to the file to submit to canvas</li></ol></td></tr></table>
 <table><tr><td> <em>Deliverable 1: </em> Add Task Logic </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="https://user-images.githubusercontent.com/54863474/211707773-e6aef7cb-d5b2-4053-bbb1-b09fc609041e.png"></td></tr>
@@ -21,7 +21,7 @@
 </td></tr>
 </table></td></tr>
 <tr><td> <em>Sub-Task 3: </em> Briefly explain the solutions to the checklist items for add_task()</td></tr>
-<tr><td> <em>Response:</em> <div>I have made sure to update lastActivity with the current datetime value. Set<br>the name, description, and due date. Due date matches one of the formats<br>mentioned in str_to_datetime() and a new task is added to the tasks list.</div><div>Here<br>I output a message confirming the new task was added or if the<br>addition was rejected due to missing data based on the prior checks.</div><div>Make sure<br>any checks/conditions clearly display an appropriate message of what failed.<br></div><div>Lastly use the save()<br>function.</div><div><br></div><br></td></tr>
+<tr><td> <em>Response:</em> <div>I have made sure to update lastActivity with the current datetime value using<br>following code: task['lastActivity'] = datetime.now(). Set the name, description, and due date. Due<br>date matches one of the formats mentioned in str_to_datetime() and a new task<br>is added to the tasks list.</div><div>Here I output a message confirming the new<br>task was added or if the addition was rejected due to missing data<br>based on the prior checks.</div><div>Try except block is used to help check if<br>the due date is in the right format only then append to the<br>list.</div><div>Lastly use the save() function.</div><div><br></div><br></td></tr>
 </table></td></tr>
 <table><tr><td> <em>Deliverable 2: </em> Process Update Logic </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="https://user-images.githubusercontent.com/54863474/211707773-e6aef7cb-d5b2-4053-bbb1-b09fc609041e.png"></td></tr>
 <tr><td><table><tr><td> <em>Sub-Task 1: </em> Add screenshot(s) of the edited process_update() function</td></tr>
@@ -30,7 +30,7 @@
 </td></tr>
 </table></td></tr>
 <tr><td> <em>Sub-Task 2: </em> Briefly explain the solutions to the checklist items for process_update()</td></tr>
-<tr><td> <em>Response:</em> <p>Here I try to fetch name, description and due of the index task<br>given and later show the old data in TODOtask and input the new<br>updated data which is further passed to update_task.<br></p><br></td></tr>
+<tr><td> <em>Response:</em> <p>Here I try to fetch name, description and due of the index task<br>given and later show the old data in TODOtask and input the new<br>updated data which is further passed to update_task. The only thing to take<br>care here is index out of bound using if loop.<br></p><br></td></tr>
 </table></td></tr>
 <table><tr><td> <em>Deliverable 3: </em> Update Task Logic </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="https://user-images.githubusercontent.com/54863474/211707773-e6aef7cb-d5b2-4053-bbb1-b09fc609041e.png"></td></tr>
 <tr><td><table><tr><td> <em>Sub-Task 1: </em> Add screenshot(s) of the edited update_task() function</td></tr>
@@ -47,7 +47,7 @@
 </td></tr>
 </table></td></tr>
 <tr><td> <em>Sub-Task 3: </em> Briefly explain the solutions to the checklist items for update_task()</td></tr>
-<tr><td> <em>Response:</em> <div>We first find the task by index and also consider index out of<br>bounds scenarios and include appropriate message(s) for invalid index. Update incoming task data<br>if it's provided (if it's not provided use the original task property value).<br>Also updated lastActivity with the current datetime value. Output that the task was<br>updated if any items were changed, otherwise mention task was not updated. Lastly<br>use the save() function.</div><br></td></tr>
+<tr><td> <em>Response:</em> <div>We first find the task by index and also consider index out of<br>bounds scenarios and include appropriate message(s) for invalid index. Update incoming task data<br>if it's provided (if it's not provided use the original task property value).<br>This is done using if-else loops. Also updated lastActivity with the current datetime<br>value using the following code: task['lastActivity'] = datetime.now(). Output that the task was<br>updated if any items were changed, otherwise mention task was not updated. Lastly<br>use the save() function.</div><br></td></tr>
 </table></td></tr>
 <table><tr><td> <em>Deliverable 4: </em> Mark Task Done/Complete Logic </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="https://user-images.githubusercontent.com/54863474/211707773-e6aef7cb-d5b2-4053-bbb1-b09fc609041e.png"></td></tr>
 <tr><td><table><tr><td> <em>Sub-Task 1: </em> Add screenshot(s) of the edited mark_done() function</td></tr>
@@ -67,7 +67,7 @@
 </td></tr>
 </table></td></tr>
 <tr><td> <em>Sub-Task 3: </em> Briefly explain the solutions to the checklist items for mark_done()</td></tr>
-<tr><td> <em>Response:</em> <div>Check if task_done in the template is False. If yes, then update it<br>with current datetime. Later if we try to mark the same task it<br>shows that it has already been completed.</div><br></td></tr>
+<tr><td> <em>Response:</em> <div>Check if task_done in the template is False. This is checked using if<br>condition. If yes, then update it with current datetime. Later if we try<br>to mark the same task it shows that it has already been completed.</div><br></td></tr>
 </table></td></tr>
 <table><tr><td> <em>Deliverable 5: </em> View Task Logic (and list) </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="https://user-images.githubusercontent.com/54863474/211707773-e6aef7cb-d5b2-4053-bbb1-b09fc609041e.png"></td></tr>
 <tr><td><table><tr><td> <em>Sub-Task 1: </em> Add screenshot(s) of the edited view_task() function</td></tr>
@@ -130,7 +130,7 @@
 </td></tr>
 </table></td></tr>
 <tr><td> <em>Sub-Task 3: </em> Briefly explain the solutions to the checklist items for get_incomplete_tasks()</td></tr>
-<tr><td> <em>Response:</em> <p>The below code checks if any task within tasks has task_done as &quot;False&quot;.<br>Prints all incomplete tasks. If no incomplete task pending it shows a message.<br></p><br></td></tr>
+<tr><td> <em>Response:</em> <p>The above code checks if any task within tasks has task_done as &quot;False&quot;.<br>Prints all incomplete tasks. If no incomplete task pending it shows a message.<br></p><br></td></tr>
 </table></td></tr>
 <table><tr><td> <em>Deliverable 8: </em> Get Over Due Tasks Logic </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="https://user-images.githubusercontent.com/54863474/211707773-e6aef7cb-d5b2-4053-bbb1-b09fc609041e.png"></td></tr>
 <tr><td><table><tr><td> <em>Sub-Task 1: </em> Add screenshot(s) of the edited get_overdue_tasks() function</td></tr>
@@ -173,7 +173,7 @@
 </td></tr>
 </table></td></tr>
 <tr><td> <em>Sub-Task 3: </em> Briefly explain the solutions to the checklist items for get_time_remaining()</td></tr>
-<tr><td> <em>Response:</em> <p>First, we try to get the task by index considering index out of<br>bounds scenarios and include appropriate message(s) for invalid index. Get the days, hours,<br>minutes, seconds between the due date and current date. Display the remaining time<br>via printing in a clear format showing X days, X hours, X minutes,<br>X seconds. In case, the due date is past already then print out<br>how many days, hours, minutes, seconds the task is overdue.<br><br></p><br></td></tr>
+<tr><td> <em>Response:</em> <p>First, we try to get the task by index considering index out of<br>bounds scenarios and include appropriate message(s) for invalid index using if-else loop. Get<br>the days, hours, minutes, seconds between the due date and current date.&nbsp; In<br>case, the due date is past already then print out how many days,<br>hours, minutes, seconds the task is overdue. Here divmod function helps calculate hours<br>and minutes from seconds. Remaining time is calculated by subtracting due date time<br>from current time or vice versa depending on whether the task is overdue<br>or pending.<br><br></p><br></td></tr>
 </table></td></tr>
 <table><tr><td> <em>Deliverable 10: </em> Misc </td></tr><tr><td><em>Status: </em> <img width="100" height="20" src="https://user-images.githubusercontent.com/54863474/211707773-e6aef7cb-d5b2-4053-bbb1-b09fc609041e.png"></td></tr>
 <tr><td><table><tr><td> <em>Sub-Task 1: </em> Add screenshot(s) of program output generated from filling in this deliverable (or close to it)</td></tr>
