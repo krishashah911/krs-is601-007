@@ -1,0 +1,44 @@
+[
+    {
+        "name": "Grocery",
+        "due": "2023-10-10 13:23:23",
+        "lastActivity": "2023-10-08 18:38:38.426694",
+        "description": "milk",
+        "done": "2023-10-08 21:34:01.840000"
+    },
+    {
+        "name": "Homework",
+        "due": "2023-10-09 23:59:59",
+        "lastActivity": "2023-09-26 19:38:50.178562",
+        "description": "assignment2",
+        "done": "2023-09-26 20:10:18.563820"
+    },
+    {
+        "name": "Cooking",
+        "due": "2023-09-26 22:26:26",
+        "lastActivity": "2023-09-26 20:26:20.668091",
+        "description": "dinner",
+        "done": "2023-10-08 21:34:07.061015"
+    },
+    {
+        "name": "Gaming",
+        "due": "2023-10-09 18:23:12",
+        "lastActivity": "2023-10-08 18:23:45.485688",
+        "description": "Write a code",
+        "done": "2023-10-08 20:32:27.897091"
+    },
+    {
+        "name": "Service Request",
+        "due": "2023-10-10 10:12:12",
+        "lastActivity": "2023-10-08 22:12:42.790771",
+        "description": "Laptop Service",
+        "done": false
+    },
+    {
+        "name": "Painting",
+        "due": "2023-10-08 10:12:11",
+        "lastActivity": "2023-10-08 22:13:53.776294",
+        "description": "New canvas painting",
+        "done": false
+    }
+]
