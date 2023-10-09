@@ -198,7 +198,11 @@ def get_incomplete_tasks():
         Solution:   The below code checks if any task within tasks has task_done as "False". Prints all incomplete task. 
     """
     _tasks = [task for task in tasks if not task['done']]   # generate a list of tasks where the task is not done 
-    list_tasks(_tasks)                                      # pass that list into list_tasks()
+
+    if not _tasks:
+        print("No incomplete tasks to show.")               # check if there are no incomplete tasks
+    else:
+        list_tasks(_tasks)                                  # pass that list into list_tasks()                                    
 
 def get_overdue_tasks():
     """ prints a list of tasks that are over due completion (not done and expired) """
