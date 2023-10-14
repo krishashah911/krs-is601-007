@@ -154,14 +154,19 @@ class PumpkinMachine:
         else:
             self.pick_extras(_extra)
 
+# UCID: krs
+# Date: 10/14/23
+# Summary:For the handle_pay function, the expected cost of the current order is added only if it 
+#         passes the payment process. And the toal is printed in total_sales variable.
+
     def handle_pay(self, expected, total):
         if self.currently_selecting != STAGE.Pay:
             raise InvalidStageException
         if total == str(expected):
             print("Thank you! Enjoy your Pumpkin and Happy Hallowween!")
             self.total_products += 1
-            self.total_sales += expected  # <-- TODO increment only if successful
-            # print(f"Total sales so far {self.total_sales}")
+            self.total_sales += expected 
+            print(f"Total sales so far is ${self.total_sales}")
             self.reset()
         else:
             raise InvalidPaymentException
@@ -170,9 +175,15 @@ class PumpkinMachine:
         print(
             f"Current Pumpkin: {','.join([x.name for x in self.inprogress_pumpkin])}")
 
+
+# UCID: krs
+# Date: 10/14/23
+# Summary:For the calculate_cost function, we try to run a for loop that adds costs of the selected 
+#         pumpkin, face stencil, and extras in the inprogress_pimpkin list.
+
     def calculate_cost(self):
-        # TODO add the calculation expression/logic for the inprogress_pumpkin
-        return 10000  # <-- this needs to be changed
+        cost = sum(item.cost for item in self.inprogress_pumpkin)
+        return cost
 
     def run(self):
         try:
@@ -183,7 +194,7 @@ class PumpkinMachine:
                 self.print_current_pumpkin()
             elif self.currently_selecting == STAGE.FaceStencil:
                 stencil = input(
-                    f"Would type of face stencil would you like {', '.join(list(map(lambda f:f.name.lower(), filter(lambda f: f.in_stock(), self.face_stencils))))}? Or type next.\n")
+                    f"Which type of face stencil would you like {', '.join(list(map(lambda f:f.name.lower(), filter(lambda f: f.in_stock(), self.face_stencils))))}? Or type next.\n")
                 self.handle_face_stencil_choice(stencil)
                 self.print_current_pumpkin()
             elif self.currently_selecting == STAGE.Extra:
@@ -193,10 +204,9 @@ class PumpkinMachine:
                 self.print_current_pumpkin()
             elif self.currently_selecting == STAGE.Pay:
                 expected = self.calculate_cost()
-                # TODO show expected value as currency format
-                # TODO require total to be entered as currency format
-                total = input(
-                    f"Your total is {expected}, please enter the exact value.\n")
+                expected = "${:.2f}".format(expected)   # Show expected value as currency format
+                total = input(                          # Require total to be entered as currency format
+                    f"Your total is ${expected}, please enter the exact value.\n")
                 self.handle_pay(expected, total)
 
                 choice = input("What would you like to do? (order or quit)\n")
