@@ -166,7 +166,8 @@ class PumpkinMachine:
             print("Thank you! Enjoy your Pumpkin and Happy Hallowween!")
             self.total_products += 1
             self.total_sales += expected 
-            print(f"Total sales so far is ${self.total_sales}")
+            self.total_sales_formatted = "{:.2f}".format(self.total_sales)
+            print(f"Total sales so far is ${self.total_sales_formatted}")
             self.reset()
         else:
             raise InvalidPaymentException
@@ -203,10 +204,10 @@ class PumpkinMachine:
                 self.handle_extra_choice(extra)
                 self.print_current_pumpkin()
             elif self.currently_selecting == STAGE.Pay:
-                expected = self.calculate_cost()
-                expected = "${:.2f}".format(expected)   # Show expected value as currency format
-                total = input(                          # Require total to be entered as currency format
-                    f"Your total is ${expected}, please enter the exact value.\n")
+                expected = self.calculate_cost()                # UCID: krs         Date: 10/14/23
+                expected_formatted = "{:.2f}".format(expected)  # Show expected value as currency format
+                total = input(                                  # Require total to be entered as currency format
+                    f"Your total is ${expected_formatted}, please enter the exact value.\n")
                 self.handle_pay(expected, total)
 
                 choice = input("What would you like to do? (order or quit)\n")
@@ -215,25 +216,69 @@ class PumpkinMachine:
                     # use return 1 to exit
                     print("Quitting the pumpkin machine")
                     return 1
+                
         except KeyboardInterrupt:
             # quit
             print("Quitting the pumpkin machine")
             sys.exit()
-        # TODO items below
-        # Note: Stage/category refers to the enum towards the top. Make sure error messages are very clear to the user
-        # handle OutOfStockException
+
+        # UCID: krs         Date: 10/14/23
+        except OutOfStockException:
+            if self.currently_selecting == STAGE.Pumpkin:
+                category_name = "Pumpkin"
+            elif self.currently_selecting == STAGE.FaceStencil:
+                category_name = "Face Stencil"
+            elif self.currently_selecting == STAGE.Extra:
+                category_name = "Extra"
             # show an appropriate message of what stage/category was out of stock
-        # handle NeedsCleaningException
-            # prompt user to type "clean" to trigger clean_machine()
-            # any other input is ignored
-            # print a message whether or not the machine was cleaned
-        # handle InvalidChoiceException
+            print(f"Bad news! Selected {category_name} is out of stock. Please choose another option.")
+
+        # UCID: krs         Date: 10/14/23    
+        except NeedsCleaningException:
+            # prompt user to type "clean" to trigger clean_machine() any other input is ignored
+            cleaning = input("The machine needs cleaning. Type 'clean' to proceed or any other input to ignore.\n")
+            if cleaning.lower() == "clean":
+                # Trigger the clean_machine method
+                self.clean_machine()   
+                # print a message whether or not the machine was cleaned                 
+                print("The machine was cleaned. Thank you for your patience")
+            else:
+                print("Cleaning was not initiated. Please try again later")
+
+        # UCID: krs         Date: 10/14/23
+        except InvalidChoiceException:
+            if self.currently_selecting == STAGE.Pumpkin:
+                category_name = "Pumpkin"
+            elif self.currently_selecting == STAGE.FaceStencil:
+                category_name = "Face Stencil"
+            elif self.currently_selecting == STAGE.Extra:
+                category_name = "Extra"
+            elif self.currently_selecting == STAGE.Pay:
+                category_name = "Payment"
             # show an appropriate message of what stage/category was the invalid choice was in
-        # handle ExceededRemainingChoicesException
+            print(f"Invalid {category_name}. Please choose a valid {category_name}.")
+
+        # UCID: krs         Date: 10/14/23    
+        except ExceededRemainingChoicesException:
+            if self.currently_selecting == STAGE.FaceStencil:
+                category_name = "Face Stencils"
+            elif self.currently_selecting == STAGE.Extra:
+                category_name = "Extras"
             # show an appropriate message of which stage/category was exceeded
+            print(f"Oops! You have exceeded the limit of {category_name} choice. Please proceed to the next step.")
             # move to the next stage/category
-        # handle InvalidPaymentException
+            if self.currently_selecting == STAGE.FaceStencil:
+                self.currently_selecting = STAGE.Extra
+            elif self.currently_selecting == STAGE.Extra:
+                self.currently_selecting = STAGE.Pay
+            else:
+                self.currently_selecting = STAGE.Pumpkin 
+
+        # UCID: krs         Date: 10/14/23 
+        except InvalidPaymentException:
             # show an appropriate message
+            print("Invalid Payment. Please enter the correct amount.")
+
         except Exception as e:
             # this is a default catch all, follow the steps above
             print(f"Something went wrong and I didn't handle it: {e}")
