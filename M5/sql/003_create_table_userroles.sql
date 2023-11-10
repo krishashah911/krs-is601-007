@@ -9,4 +9,3 @@ CREATE TABLE
         UNIQUE KEY (role_id, user_id),
         FOREIGN KEY role_id REFERENCES IS601_Roles(id),
         FOREIGN KEY user_id REFERENCES IS601_Users(id)
-    )
