@@ -78,11 +78,12 @@ def importCSV():
                 }
                 if all(organization_data.values()):
                     organizations.append(organization_data)
-               
+
                 # TODO importcsv-4: extract donation data and append to donation list
                 # as a dict only with donation data if all donation fields are present (refer to above SQL)
                 ### UCID: krs
                 ### Date: 11/18/23
+            for row in csv_reader:
                 donation_data = {
                     'donor_firstname': row.get('donor_name').split()[0],
                     'donor_lastname': row.get('donor_name').split()[1] if len(row["donor_name"].split()) > 1 else "",
