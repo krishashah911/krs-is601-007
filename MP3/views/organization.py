@@ -11,17 +11,51 @@ def search():
     # TODO search-1 retrieve id, name, address, city, country, state, zip, website, donation count as donations for the organization
     # don't do SELECT * and replace the below "..." portion
     allowed_columns = ["name", "city", "country", "state", "modified", "created"]
-    query = "... WHERE 1=1"
+    query = """SELECT id, name, address, city, country, state, zip, website,
+    (SELECT COUNT(*) FROM IS601_MP3_Donations WHERE organization_id = IS601_MP3_Organizations.id) as donations, created, modified
+    FROM IS601_MP3_Organizations
+    WHERE 1=1"""
     args = {} # <--- add values to replace %s/%(named)s placeholders
-   
     
     # TODO search-2 get name, country, state, column, order, limit request args
+    name = request.args.get("name")
+    country = request.args.get("country")
+    state = request.args.get("state")
+    column = request.args.get("column")
+    order = request.args.get("order")
+    limit = request.args.get("limit", 10)
+
     # TODO search-3 append a LIKE filter for name if provided
+    if name:
+        query += " AND name LIKE %(name)s"
+        args["name"] = f"%{name}%"
+    
     # TODO search-4 append an equality filter for country if provided
+    if country:
+        query += " AND country = %(country)s"
+        args["country"] = country
+
     # TODO search-5 append an equality filter for state if provided
+    if state:
+        query += " AND state = %(state)s"
+        args["state"] = state
+
     # TODO search-6 append sorting if column and order are provided and within the allows columns and allowed order asc,desc
+    if column and order and column in allowed_columns and order.lower() in ["asc", "desc"]:
+        query += f" ORDER BY {column} {order.upper()}"
+
     # TODO search-7 append limit (default 10) or limit greater than or equal to 1 and less than or equal to 100
+    try:
+        limit = int(limit)
+        if 1 <= limit <= 100:
+            query += " LIMIT %(limit)s"
+            args["limit"] = limit
+    except ValueError:
+        flash("Limit must be a number.", "danger")
+
     # TODO search-8 provide a proper error message if limit isn't a number or if it's out of bounds
+    except ValueError:
+        flash("Limit must be a number between 1 and 100.", "danger")
     limit = 10 # TODO change this per the above requirements
     
     query += " LIMIT %(limit)s"
@@ -35,7 +69,7 @@ def search():
             rows = result.rows
     except Exception as e:
         # TODO search-9 make message user friendly
-        flash(str(e), "danger")
+        flash("An error occurred while retrieving organizations. Please try again later.", "danger")
     # hint: use allowed_columns in template to generate sort dropdown
     # hint2: convert allowed_columns into a list of tuples representing (value, label)
     
