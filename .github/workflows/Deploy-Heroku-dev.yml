@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - dev
-      - DeploymentSetup
+      - F22-Flask-Sample-Auth
 
 # Your workflows jobs.
 jobs:
@@ -15,9 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DB_URL: ${{secrets.DB_URL}}
+      SECRET_KEY: ${{secrets.SECRET_KEY}}
       PORT: 8080
       # change to the project directory you're deploying
-      WORKING_DIRECTORY: M5
+      WORKING_DIRECTORY: flask_sample_005
     defaults:
       run:
           working-directory: ${{env.WORKING_DIRECTORY}}
@@ -66,7 +67,5 @@ jobs:
           # By default, this argument is set to "web".
           # For more information look at https://devcenter.heroku.com/articles/process-model
           process_type: web
-          
-
           
 ### ⬆ IMPORTANT PART ⬆ ###

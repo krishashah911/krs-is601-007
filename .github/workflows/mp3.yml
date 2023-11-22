@@ -1,12 +1,13 @@
 # Your workflow name.
-name: Deploy to heroku prod.
+name: Deploy to heroku mp3.
 
 # Run workflow on every push to master branch.
 
 on:
   push:
     branches:
-      - prod
+      - mp3-prod
+      - MiniProject-3
 
 # Your workflows jobs.
 jobs:
@@ -14,10 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DB_URL: ${{secrets.DB_URL}}
-      SECRET_KEY: ${{secrets.SECRET_KEY}}
       PORT: 8080
       # change to the project directory you're deploying
-      WORKING_DIRECTORY: flask_sample
+      WORKING_DIRECTORY: MP3
     defaults:
       run:
           working-directory: ${{env.WORKING_DIRECTORY}}
@@ -46,7 +46,7 @@ jobs:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           
           # Name of the heroku application to which the build is to be sent.
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_DEV }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME_MP3 }}
 
           # (Optional, default: "./")
           # Dockerfile directory.
@@ -67,6 +67,6 @@ jobs:
           # For more information look at https://devcenter.heroku.com/articles/process-model
           process_type: web
           
-
+   
           
 ### ⬆ IMPORTANT PART ⬆ ###
