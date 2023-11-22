@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request, redirect, flash
 from werkzeug.utils import secure_filename
 from sql.db import DB
 import traceback
+import datetime
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 @admin.route("/import", methods=["GET","POST"])
@@ -20,7 +21,16 @@ def importCSV():
         # TODO importcsv-1 check that it's a .csv file, return a proper flash message if it's not and don't attempt to process the file
         ### UCID: krs
         ### Date: 11/18/23
-        if file and secure_filename(file.filename).endswith('.csv'):
+
+        if file and not file.filename.endswith('.csv'):
+            flash('Please upload a valid CSV file', 'danger')
+            return redirect(request.url)
+
+        if file.filename == '':
+            flash('No selected file', 'warning')
+            return redirect(request.url)
+        
+        if file and secure_filename(file.filename):
             organizations = []
             donations = []
             # DON'T EDIT
@@ -60,41 +70,40 @@ def importCSV():
             ### UCID: krs
             ### Date: 11/18/23
             csv_reader = csv.DictReader(stream)
-            for row in csv_reader: 
-                # print(row) #example
+            for row in csv_reader:
+                print(row) #example
                 # TODO importcsv-3: extract organization data and append to organization list
                 # as a dict only with organization data if all organization fields are present (refer to above SQL)
                 ### UCID: krs
                 ### Date: 11/18/23
                 organization_data = {
-                    'name': row['organization_name'],
-                    'address': row['organization_address'],
-                    'city': row['organization_city'],
-                    'country': row['organization_country'],
-                    'state': row['organization_state'],
-                    'zip': row['organization_zip'],
-                    'website': row['organization_website'],
-                    'description': row['organization_description']
+                    "name": row["organization_name"],
+                    "address": row["organization_address"],
+                    "city": row["organization_city"],
+                    "country": row["organization_country"],
+                    "state": row["organization_state"],
+                    "zip": row["organization_zip"],
+                    "website": row["organization_website"],
+                    "description": row["organization_description"]
                 }
                 if all(value for value in organization_data.values()):
                     organizations.append(organization_data)
-
+                    
                 # TODO importcsv-4: extract donation data and append to donation list
                 # as a dict only with donation data if all donation fields are present (refer to above SQL)
                 ### UCID: krs
                 ### Date: 11/18/23
-            for row in csv_reader:
-                name = row.get("donar_name")
+                name = row.get("donor_name")
                 donation_data = {
-                    'donor_firstname': name.split()[0],
-                    'donor_lastname': name.split()[1] if len(row["donor_name"].split()) > 1 else "",
-                    'donor_email': row.get('donor_email'),
-                    'item_name': row.get('item_name'),
-                    'item_description': row.get('item_description'),
-                    'quantity': row.get('item_quantity'),
-                    'organization_name': row.get('organization_name'),
-                    'donation_date': row.get('donation_date'),
-                    'comments': row.get('comments')
+                    "donor_firstname": name.split(" ")[0],  # Assuming donor_name is in the format "First Last"
+                    "donor_lastname": name.split(" ")[1] if len(name.split()) > 1 else "",  # Extracting last name if available
+                    "donor_email": row.get("donor_email"),
+                    "item_name": row.get("item_name"),
+                    "item_description": row.get("item_description"),
+                    "quantity": row.get("item_quantity"),
+                    "organization_name": row.get("organization_name"),
+                    "donation_date": row.get("donation_date"),
+                    "comments": row.get("comments")
                 }
                 if all(value for value in donation_data.values()):
                     donations.append(donation_data)
@@ -138,8 +147,5 @@ def importCSV():
                 print(f"Result {result}")
             except Exception as e:
                     traceback.print_exc()
-                    flash("There was an error counting session queries", "danger")
-        else:
-            flash('Invalid file format. Please upload a .csv file.', 'danger')
-            return redirect(request.url)    
+                    flash("There was an error counting session queries", "danger")   
     return render_template("upload.html")
