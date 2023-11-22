@@ -247,7 +247,6 @@ def add():
                 has_error = True
                 flash("Invalid date format. Please use YYYY-MM-DD", "danger")   
         # TODO add-10 comments are optional
-
         if not has_error:
             try:
                 result = DB.insertOne("""
@@ -293,7 +292,7 @@ def edit():
     else:
         if request.method == "POST":
             
-            # TODO edit-2 retrieve form data for donor_firstname, donor_lastname, donor_email, organization_id, item_name, item_description, item_quantity, donation_date, comments
+            # TODO add-2 retrieve form data for donor_firstname, donor_lastname, donor_email, organization_id, item_name, item_description, item_quantity, donation_date, comments
             # UCID: krs
             # Date: 11/21/23
             donor_firstname = request.form.get("donor_firstname")

@@ -8,15 +8,15 @@ organization = Blueprint('organization', __name__, url_prefix='/organization')
 def search():
     rows = []
     has_error = False
+    organization_id = request.args.get("organization_id")
     # DO NOT DELETE PROVIDED COMMENTS
     # TODO search-1 retrieve id, name, address, city, country, state, zip, website, donation count as donations for the organization
     # don't do SELECT * and replace the below "..." portion
     # UCID: krs
     # Date: 11/21/23
-    allowed_columns = ["id", "name", "city", "country", "state", "modified", "created"]
+    allowed_columns = ["name", "city", "country", "state", "modified", "created"]
     query = """
-    SELECT 
-    id as 'id', 
+    SELECT  
     name as 'name', 
     address as 'address', 
     city as 'city', 
@@ -24,7 +24,8 @@ def search():
     state as 'state', 
     zip as 'zip', 
     website as 'website',
-    (SELECT COUNT(*) FROM IS601_MP3_Donations WHERE organization_id = IS601_MP3_Organizations.id) as donations, created, modified
+    (SELECT COUNT(*) FROM IS601_MP3_Donations WHERE IS601_MP3_Donations.organization_id = IS601_MP3_Organizations.id) as donations, created, modified,
+    IS601_MP3_Organizations.id
     FROM IS601_MP3_Organizations
     WHERE 1=1
     """
@@ -109,17 +110,8 @@ def search():
     # hint2: convert allowed_columns into a list of tuples representing (value, label)
     
     # do this prior to passing to render_template, but not before otherwise it can break validation
-    try:
-        result = DB.selectOne("SELECT name FROM IS601_MP3_Organizations WHERE id = %s", id)
-        if result.status:
-            id = result.rows.get("id")
-            name = result.rows.get("name")
-        else:
-            flash("An error occurred while fetching organization name. Please try again later.", "error")
-    except Exception as e:
-        print(f"organization name fetch error {e}")
-        flash("An error occurred while fetching organization name. Please try again later.", "danger")
-    return render_template("list_organizations.html",id=id, rows=rows, allowed_columns=allowed_columns)
+ 
+    return render_template("list_organizations.html", rows=rows, allowed_columns=allowed_columns)
 
 
 @organization.route("/add", methods=["GET","POST"])
@@ -135,7 +127,7 @@ def add():
         city = request.form.get("city")
         state = request.form.get("state")
         country = request.form.get("country")
-        zip = request.form.get("zip")
+        zip_code = request.form.get("zip")
         website = request.form.get("website")
         description = request.form.get("description","")
         
@@ -159,6 +151,7 @@ def add():
         if not city:
             has_error = True
             flash("Name of the city is required", "danger")
+        state1 = country + "-" + state
 
         # TODO add-5 state is required (flash proper error message)
         # UCID: krs
@@ -169,6 +162,10 @@ def add():
 
         # TODO add-5a state should be a valid state mentioned in pycountry for the selected state
         # hint see geography.py and pycountry documentation to solve this
+        elif state1 not in [s.code for s in pycountry.subdivisions.get(country_code=country) ]:
+            flash("Invalid State", "danger")
+            has_error = True
+
         # TODO add-6 country is required (flash proper error message)
         # UCID: krs
         # Date: 11/21/23
@@ -178,14 +175,19 @@ def add():
 
         # TODO add-6a country should be a valid country mentioned in pycountry
         # hint see geography.py and pycountry documentation to solve this
+        elif country not in [c.alpha_2 for c in pycountry.countries]:
+            flash("Invalid Country", "danger")
+            has_error = True
+
         # TODO add-7 website is not required
         # TODO add-8 zip is required (flash proper error message)
         # note: call zip variable zipcode as zip is a built in function it could lead to issues
         # UCID: krs
         # Date: 11/21/23
-        if not zip:
+        if not zip_code:
             has_error = True
             flash("Zip is required", "danger")
+
         # TODO add-9 description is not required
 
         if not has_error:
@@ -237,7 +239,7 @@ def edit():
             city = request.form.get("city")
             state = request.form.get("state")
             country = request.form.get("country")
-            zip = request.form.get("zip")
+            zip_code = request.form.get("zip")
             website = request.form.get("website")
             description = request.form.get("description","")
         
@@ -247,6 +249,7 @@ def edit():
             if not name:
                 flash("Organization Name is required", "danger")
                 has_error = True
+                return redirect(url_for("organization.edit", id=id))
 
             # TODO edit-4 address is required (flash proper error message)
             # UCID: krs
@@ -254,42 +257,65 @@ def edit():
             if not address:
                 flash("Address is required", "danger")
                 has_error = True
-
+                return redirect(url_for("organization.edit", id=id))
             # TODO edit-5 city is required (flash proper error message)
             # UCID: krs
             # Date: 11/21/23
             if not city:
                 flash("Name of the city is required", "danger")
                 has_error = True
-
+                return redirect(url_for("organization.edit", id=id))
             # TODO edit-6 state is required (flash proper error message)
             # UCID: krs
             # Date: 11/21/23
             if not state:
                 flash("Name of the state is required", "danger")
                 has_error = True
-
+                return redirect(url_for("organization.edit", id=id))
+            
             # TODO edit-6a state should be a valid state mentioned in pycountry for the selected state
             # hint see geography.py and pycountry documentation
+            valid_states = [subdivision.code.split("-")[1] for subdivision in pycountry.subdivisions.get(country_code=country, default=[])]
+            if state not in valid_states:
+                flash("Invalid state selected.", "danger")
+                return redirect(url_for("organization.edit", id=id))
+
             # TODO edit-7 country is required (flash proper error message)
             # UCID: krs
             # Date: 11/21/23
             if not country:
                 flash("Name of the country is required", "danger")
                 has_error = True
-
+                return redirect(url_for("organization.edit", id=id))
+            
             # TODO edit-7a country should be a valid country mentioned in pycountry
             # hint see geography.py and pycountry documentation
+            valid_countries = [country.alpha_2 for country in pycountry.countries]
+            if country not in valid_countries:
+                flash("Invalid country selected.", "danger")
+                return redirect(url_for("organization.edit", id=id))
+            
             # TODO edit-8 website is not required
             # TODO edit-9 zipcode is required (flash proper error message)
             # note: call zip variable zipcode as zip is a built in function it could lead to issues
             # populate data dict with mappings
             # UCID: krs
             # Date: 11/21/23
-            if not zip:
+            if not zip_code:
                 flash("Zip code is required", "danger")
                 has_error = True
-
+                return redirect(url_for("organization.edit", id=id))
+            
+            data.update({
+            "name": name,
+            "description": description,
+            "address": address,
+            "city": city,
+            "state": state,
+            "country": country,
+            "zip": zip_code,
+            "website": website
+        })
             has_error = False # use this to control whether or not an insert occurs
 
             if not has_error:
@@ -301,16 +327,17 @@ def edit():
                     result = DB.update("""
                     UPDATE IS601_MP3_Organizations
                     SET
-                    name = %s,
-                    address = %s,
-                    city = %s,
-                    state = %s,
-                    country = %s,
-                    zip = %s,
-                    website = %s,
-                    description = %s,
-                    WHERE id = %s
-                    """,data, name, address, city, state, country, zip, website, description)
+                    name = %(name)s,
+                    address = %(address)s,
+                    city = %(city)s,
+                    state = %(state)s,
+                    country = %(country)s,
+                    zip = %(zip)s,
+                    website = %(website)s,
+                    description = %(description)s,
+                    WHERE 
+                    id = %(id)s
+                    """,data)
                     
                     if result.status:
                         flash("Updated record", "success")
@@ -326,10 +353,10 @@ def edit():
             # UCID: krs
             # Date: 11/21/23
             result = DB.selectOne("""
-            SELECT IS601_MP3_Organizations.id, name, address, city, state, country, zip, website, description
+            SELECT IS601_MP3_Organizations.id, name, address, city, state, country, zip, website, description, created, modified
             FROM IS601_MP3_Organizations 
-            WHERE IS601_MP3_Organizations.id = %s
-            """, id)
+            WHERE IS601_MP3_Organizations.id = %(id)s
+            """, {"id": id})
             if result.status:
                 row = result.row
                 

@@ -21,6 +21,8 @@ Donation{% endblock %}
             organization (provided) (required)
             if a validation error occurs, the inserted form data should persist
             #}
+            {# UCID: krs #}
+            {# Date: 11/21/23 #}
             <!--donor first name-->
             <div class="form-group mb-3">
                 <label class="form-label" for="donor_firstname">First Name</label>
@@ -50,6 +52,8 @@ Donation{% endblock %}
                 </div>
             </div>
             <!--item_quantity-->
+            {# UCID: krs #}
+            {# Date: 11/21/23 #}
             <div class="form-group mb-3">
                 <label class="form-label" for="item_quantity">Item Quantity</label>
                 <input type="number" class="form-control" id="item_quantity" name="item_quantity" value="{{ donation.item_quantity }}" required min = "1">

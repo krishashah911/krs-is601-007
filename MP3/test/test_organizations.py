@@ -69,7 +69,7 @@ def test_organization_form(fake_org_2):
         assert ele.get("id"), f"Input element {i} is missing id"
         assert label, f"Input element {i} is missing label or proper 'for' attribute"
 
-def off_test_organization_edit(fake_org_2, client):
+def test_organization_edit(fake_org_2, client):
     test_dict = {
         "name":"tctest_delme2",
         "address":"fake2",

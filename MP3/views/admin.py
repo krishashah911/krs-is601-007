@@ -67,16 +67,16 @@ def importCSV():
                 ### UCID: krs
                 ### Date: 11/18/23
                 organization_data = {
-                    'name': row.get('organization_name'),
-                    'address': row.get('organization_address'),
-                    'city': row.get('organization_city'),
-                    'country': row.get('organization_country'),
-                    'state': row.get('organization_state'),
-                    'zip': row.get('organization_zip'),
-                    'website': row.get('organization_website'),
-                    'description': row.get('organization_description')
+                    'name': row['organization_name'],
+                    'address': row['organization_address'],
+                    'city': row['organization_city'],
+                    'country': row['organization_country'],
+                    'state': row['organization_state'],
+                    'zip': row['organization_zip'],
+                    'website': row['organization_website'],
+                    'description': row['organization_description']
                 }
-                if all(organization_data.values()):
+                if all(value for value in organization_data.values()):
                     organizations.append(organization_data)
 
                 # TODO importcsv-4: extract donation data and append to donation list
@@ -84,9 +84,10 @@ def importCSV():
                 ### UCID: krs
                 ### Date: 11/18/23
             for row in csv_reader:
+                name = row.get("donar_name")
                 donation_data = {
-                    'donor_firstname': row.get('donor_name').split()[0],
-                    'donor_lastname': row.get('donor_name').split()[1] if len(row["donor_name"].split()) > 1 else "",
+                    'donor_firstname': name.split()[0],
+                    'donor_lastname': name.split()[1] if len(row["donor_name"].split()) > 1 else "",
                     'donor_email': row.get('donor_email'),
                     'item_name': row.get('item_name'),
                     'item_description': row.get('item_description'),
@@ -95,7 +96,7 @@ def importCSV():
                     'donation_date': row.get('donation_date'),
                     'comments': row.get('comments')
                 }
-                if all(donation_data.values()):
+                if all(value for value in donation_data.values()):
                     donations.append(donation_data)
                 
                 
@@ -132,7 +133,6 @@ def importCSV():
                 ### UCID: krs
                 ### Date: 11/18/23
                 flash("No donations were loaded from the CSV file.", "info")
-                pass
             try:
                 result = DB.selectOne("SHOW SESSION STATUS LIKE 'questions'")
                 print(f"Result {result}")

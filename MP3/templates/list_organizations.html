@@ -21,7 +21,7 @@
             <div class="col">
                 <label class="visually-hidden" for="name">organization name</label>
                 <input type="text" class="form-control" id="name" name="name"
-                       placeholder="organization name" value="{{ request.args.get('name') }}">
+                       placeholder="organization name" value="{{ request.args.get('name') or ''}}">
             </div>
             <!-- country state filter-->
             {{country_state_selector(layout="horizontal")}}
@@ -89,9 +89,9 @@
                         {% endif %}
                     {% endfor %}   
                     <td>
-                        <a href="{{ url_for('donations.search', organization_id=rows['id']) }}" class="btn btn-info btn-sm">View Donations</a>
-                        <a href="{{ url_for('organization.edit', id=rows['id']) }}" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="{{ url_for('organization.delete', id=rows['id'], **request.args) }}" class="btn btn-danger btn-sm">Delete</a>
+                        <a href="{{ url_for('donations.search', organization_id=r.get('id')) }}">View</a>
+                        <a href="{{ url_for('organization.edit', id=r.get('id')) }}">Edit</a>
+                        <a href="{{ url_for('organization.delete', id=r.get('id'), **request.args) }}">Delete</a>
                     </td>
                 </tr>
                 {% endfor %}
