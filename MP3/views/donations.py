@@ -270,7 +270,6 @@ def add():
                 # Date: 11/21/23
 
                 if result.status:
-                    print("donation record created")
                     flash("Created Donation Record", "success")
             except Exception as e:
                 # TODO add-7 make message user friendly
@@ -294,7 +293,7 @@ def edit():
     else:
         if request.method == "POST":
             
-            # TODO add-2 retrieve form data for donor_firstname, donor_lastname, donor_email, organization_id, item_name, item_description, item_quantity, donation_date, comments
+            # TODO edit-2 retrieve form data for donor_firstname, donor_lastname, donor_email, organization_id, item_name, item_description, item_quantity, donation_date, comments
             # UCID: krs
             # Date: 11/21/23
             donor_firstname = request.form.get("donor_firstname")
@@ -391,7 +390,7 @@ def edit():
                     comments = %s
                     WHERE id = %s
                     """, donor_firstname, donor_lastname, donor_email, organization_id, item_name,
-                        item_description, item_quantity, donation_date, comments, donation_id,)
+                        item_description, item_quantity, donation_date, comments, donation_id)
                     
                     if result.status:
                         flash("Updated record", "success")

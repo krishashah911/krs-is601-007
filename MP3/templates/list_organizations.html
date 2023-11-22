@@ -15,19 +15,32 @@
             limit (default 10)
             ensure all fields prefill with request arg data if provided
             #}
+            {# UCID: krs #}
+            {# Date: 11/20/23 #}
             <!--name filter-->
             <div class="col">
-                <label class="visually-hidden" for="name">Organization Name</label>
+                <label class="visually-hidden" for="name">organization name</label>
                 <input type="text" class="form-control" id="name" name="name"
-                       placeholder="Organization Name" value="{{ request.args.get('name') }}">
+                       placeholder="organization name" value="{{ request.args.get('name') }}">
             </div>
             <!-- country state filter-->
             {{country_state_selector(layout="horizontal")}}
             <!-- sort filter -->
             {# TODO pass/set the columns that can be used for sort/filter (i.e. allowed_columns) #}
-            {{sort_filter(cols=[])}}
+            {{sort_filter(cols=[
+                ("name", "Name"),
+                ("city", "City"),
+                ("country", "Country"),
+                ("state", "State"),
+                ("modified", "Modified"),
+                ("created", "Created")
+                ])}}
             <!--limit filter-->
-
+            <div class="col">
+                <label class="form-label visually-hidden" for="limit">Limit</label>
+                <input class="form-control" type="number" min="1" max="100" id="limit" name="limit"
+                    value="{{request.args.get('limit') or '10'}}" />
+            </div>
             <div class="col">
                 <input type="submit" class="btn btn-primary" value="Filter" />
             </div>
@@ -45,9 +58,11 @@
                     {# don't show any id or organization_id columns #}
                     {# IMPORTANT use table column names as the headings, replace _ with space via filter #}
                     <!-- add th elements -->
-                    {% for col in cols %}
-                    {% if col not in ['id', 'organization_id'] %}
-                        <th>{{ col|replace('_', ' ')|title }}</th>
+                    {% for r in rows[0] %}
+                    {% if r == 'organization_name' %}
+                        <th>Organization Name</th>
+                    {% elif r not in ['id', 'modified', 'created'] %}
+                        <th>{{ r }}</th>
                     {% endif %}
                     {% endfor %}
                     <!-- keep this -->
@@ -66,23 +81,17 @@
                 a delete button that passes the organization id and the request args to the organization delete route
                 #}
                 <!-- iterate over rows and generate proper tr and td elements with the data -->
-                {% for row in rows %}
+                {% for r in rows %}
                 <tr>
-                    {% for col in cols %}
-                        {% if col not in ['id', 'organization_id'] %}
-                            <td>
-                                {% if col == 'website' %}
-                                    <a href="{{ row[col] }}" target="_blank">Website</a>
-                                {% else %}
-                                    {{ row[col] }}
-                                {% endif %}
-                            </td>
+                    {% for key,value in r.items() %}
+                        {% if key not in ['id', 'modified', 'created'] %}
+                            <td>{{value}}</td> 
                         {% endif %}
-                    {% endfor %}
+                    {% endfor %}   
                     <td>
-                        <a href="{{ url_for('donations.search', organization_id=row['id']) }}" class="btn btn-info btn-sm">View Donations</a>
-                        <a href="{{ url_for('organization.edit', id=row['id']) }}" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="{{ url_for('organization.delete', id=row['id'], **request.args) }}" class="btn btn-danger btn-sm">Delete</a>
+                        <a href="{{ url_for('donations.search', organization_id=rows['id']) }}" class="btn btn-info btn-sm">View Donations</a>
+                        <a href="{{ url_for('organization.edit', id=rows['id']) }}" class="btn btn-primary btn-sm">Edit</a>
+                        <a href="{{ url_for('organization.delete', id=rows['id'], **request.args) }}" class="btn btn-danger btn-sm">Delete</a>
                     </td>
                 </tr>
                 {% endfor %}
