@@ -1,5 +1,4 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for
-import mysql.connector
 from sql.db import DB  # Import your DB class
 from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm  # Import your NetflixdataForm class
 from roles.permissions import admin_permission
