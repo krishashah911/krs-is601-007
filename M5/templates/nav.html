@@ -1,7 +1,10 @@
 {% from "_dropdown_nav.html" import dropdown_nav %}
-<nav class="navbar navbar-expand-lg bg-light">
+
+<nav class="navbar navbar-expand-lg bg-light" style="position: fixed; top: 0;">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">Sample</a>
+        <a class="navbar-brand" href="#">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="uNoGS" style="width: 80px; height: auto; color: red;">
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false"
@@ -34,6 +37,13 @@
                 ("sample.list", "List"),
                 ] %}
                 {{dropdown_nav("Samples", samples)}}
+
+                {% set netflixdata = [
+                    ("netflixdata.add", "Add"),
+                    ("netflixdata.list", "List"),
+                    ] %}
+                {{dropdown_nav("Netflixdata", netflixdata)}}
+                
                 <!-- roles nav (requires admin )-->
                 {% if current_user.has_role("Admin") %}
                 {% set roles = [
@@ -43,14 +53,11 @@
                 ] %}
 
                 {{dropdown_nav("Roles", roles)}}
-                <!-- stocks nav (requires admin )-->
-
-                {% set netflixdata = [
-                ("netflixdata.fetch", "Fetch"),
-                ("netflixdata.add", "Add"),
-                ("netflixdata.list", "List"),
-                ] %}
-                {{dropdown_nav("Netflixdata", netflixdata)}}
+                
+                <li class="nav-item">
+                    <a class="nav-link"
+                        href="{{url_for('netflixdata.fetch')}}">Fetch Data</a>
+                </li>
                 {% endif %}
                 <li class="nav-item">
                     <a class="nav-link"

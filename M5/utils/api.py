@@ -160,7 +160,7 @@ class API:
 if __name__ == "__main__":
     # example using https://rapidapi.com/alphavantage/api/alpha-vantage
     # querystring = {"function": "GLOBAL_QUOTE", "symbol": "MSFT", "datatype": "json"}
-    querystring = {"order_by":"date","type":"movie"}
+    querystring = {"function": "result", "order_by":"date","title_type":"movie", "datatype": "json"}
 
     resp = API.get("/search/titles", querystring)
     print(resp)

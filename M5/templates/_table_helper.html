@@ -29,13 +29,13 @@
                 {% if view or edit or delete %}
                 <td>
                     {% if view and r["id"] %}
-                    <a href="{{ url_for(view) }}?id={{ r['id'] }}">View</a>
+                    <a href="{{ url_for(view) }}?id={{ r['id'] }}" class="btn btn-secondary btn-sm">View</a>
                     {% endif %}
                     {% if edit and r["id"] %}
-                    <a href="{{ url_for(edit) }}?id={{ r['id'] }}">Edit</a>
+                    <a href="{{ url_for(edit) }}?id={{ r['id'] }}" class="btn btn-secondary btn-sm">Edit</a>
                     {% endif %}
                     {% if delete and r["id"] %}
-                    <a href="{{ url_for(delete) }}?id={{ r['id'] }}">Delete</a>
+                    <a href="{{ url_for(delete) }}?id={{ r['id'] }}" class="btn btn-danger btn-sm">Delete</a>
                     {% endif %}
                 </td>
                 {% endif %}

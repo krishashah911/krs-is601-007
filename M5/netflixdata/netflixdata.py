@@ -15,8 +15,9 @@ def fetch():
             from utils.lazy import DictToObject
             # Create a new netflixdata record in the database
             result = Unogs.get_movie_info(form.title_type.data)
-            if result and result.get("status") == "success":
-                # result = DictToObject(result)
+            print(result)
+            if result:
+                result = DictToObject(result)
                 # result.change_percent = result.change_percent.replace("%","")
                 result = DB.insertOne(
                     """INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, rating, `year`, imdb_id, title_date)
@@ -34,12 +35,14 @@ def fetch():
                 )
                 if result.status:
                     flash(f"Loaded netflix data", "success")
+                    print("OKKK")
         except Exception as e:
             flash(f"Error loading netflix record: {e}", "danger")
+            print("Not OK")
     return render_template("netflixdata_search.html", form=form)
 
 @netflixdata.route("/add", methods=["GET", "POST"])
-@admin_permission.require(http_exception=403)
+# @admin_permission.require(http_exception=403)
 def add():
     form = NetflixdataForm()
     if form.validate_on_submit():
@@ -86,7 +89,7 @@ def edit():
     return render_template("netflixdata_form.html", form=form, type="Edit")
 
 @netflixdata.route("/list", methods=["GET"])
-@admin_permission.require(http_exception=403)
+# @admin_permission.require(http_exception=403)
 def list():
     rows = []
     try:

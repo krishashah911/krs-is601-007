@@ -21,15 +21,25 @@ class Unogs(API):
         params["type"] = f"{type}"
         url = "/search/titles"
         resp = API.get(url, params)
-        
-        # You might need to adjust the parsing logic based on the actual structure of the API response
-        fixed = resp  # Assuming the structure of the response is already in the desired format
-        
-        return fixed
-    
-    
+        if "results" in resp:
+            results = resp["results"]
+
+            # Extract the first result (assuming it's a dictionary)
+            if results and isinstance(results, list):
+                first_result = results[0]
+
+                # Rename keys and replace spaces with underscores
+                fixed = {}
+                for k, v in first_result.items():
+                    if "." in k:
+                        k = k.split(".")[1].strip()
+                    fixed[k.replace(" ", "_")] = v
+
+                return fixed
+
+        return {}
 
 if __name__ == "__main__":
     # Assuming you have a utility function to handle API requests similar to the one used in the AlphaVantage example
-    resp = Unogs.get_movie_info("series")
+    resp = Unogs.get_movie_info("movie")
     print(resp)
