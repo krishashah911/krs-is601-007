@@ -8,6 +8,7 @@ on:
     branches:
       - dev
       - F22-Flask-Sample-Auth
+      - Milestone2
 
 # Your workflows jobs.
 jobs:
