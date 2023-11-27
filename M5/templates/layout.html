@@ -34,7 +34,7 @@
 </head>
 
 <body>
-    <div id="header" class = "fixed-top">
+    <div id="header">
         {% include 'nav.html' %}
         {% include 'flash.html' %}
         <style>
@@ -44,9 +44,7 @@
         </style>
     </div>
     <br>
-    <br>
-    <br>
-    <br>
+
     <div id="content" class="overflow-auto" style="height: 84vh">
         {% block content %}{% endblock %}</div>
     <br>
