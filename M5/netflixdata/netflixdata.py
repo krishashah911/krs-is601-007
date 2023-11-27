@@ -184,6 +184,9 @@ def delete():
 @users_permission.require(http_exception=403)
 def view():
     rows = []
+    title = ""
+    has_error = False
+
     query = """
         SELECT
         IS601_Ratings.id as 'id',
@@ -203,28 +206,55 @@ def view():
 
     args = {}
     allowed_columns = ["ratings", "heading", "comments", "created", "modified"]
-    w_id = request.args.get("watchlist_id")
+    watchlist_id = request.args.get("watchlist_id")
+    id = request.args.get("id")
     ratings = request.args.get("ratings")
     heading = request.args.get("heading")
     comments = request.args.get("comments")
     column = request.args.get("column")
     order = request.args.get("order")
     limit = request.args.get("limit",10)
+    
+
+
+    if watchlist_id:
+        query += " AND IS601_Ratings.watchlist_id = %(watchlist_id)s"
+        args["watchlist_id"] = watchlist_id
+
+
+    if column and order:
+        if column in allowed_columns and order in ["asc", "desc"]:
+            query += f" ORDER BY {column} {order}"
+
 
     try:
-        result = DB.selectAll(query, args)
-        if result.status:
-            rows = result.rows
-            # print(f"rows: {rows}")
-        else:
-            flash("Error retrieving rating. Please try again.", "error")
-    except Exception as e:
-        flash("An unexpected error occured. Please try again later.", "error")
-    
-    if w_id:
+        if limit:
+            limit = int(limit)
+            if 1 <= limit <= 100:
+                query += " LIMIT %(limit)s"
+                args["limit"] = limit
+            else:
+                flash("Limit must be between 1 and 100", "error")
+    except ValueError:
+        flash("Invalid limit value", "error")
+        has_error = True
+
+    if not has_error:
         try:
-            result = DB.selectOne("SELECT title FROM IS601_Watchlist WHERE id = %s", w_id)
+            result = DB.selectAll(query, args)
             if result.status:
+                rows = result.rows
+                # print(f"rows: {rows}")
+            else:
+                flash("Error retrieving rating. Please try again.", "error")
+        except Exception as e:
+            flash("An unexpected error occured. Please try again later.", "error")
+        
+    if watchlist_id:
+        try:
+            result = DB.selectOne("SELECT title FROM IS601_Watchlist WHERE id = %s", watchlist_id)
+            if result.status:
+                watchlist_id = result.row.get("id")
                 title = result.row.get("title")
             else:
                 flash("An error occurred while fetching title. Please try again later.", "error")

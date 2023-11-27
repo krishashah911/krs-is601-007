@@ -9,7 +9,7 @@
 {% set edit = "netflixdata.edit" %}
 {% set delete = "netflixdata.delete" %}
 <div class="container-fluid">
-
+    <div class="h1 text-center">Netflix Content</div>
     <form method="GET">
         <div class="row">
             <!--title name-->
@@ -46,7 +46,63 @@
         </div>
     </form>
 
-    {{ render_table(rows, "Netflix Content", [], view, edit, delete) }}
+    <div class="table-responsive">
+        <table class="table">
+            {% if rows and rows|length > 0 %}
+            <thead>
+                <tr class="text-capitalize">
+                    {# generate th tags for each column to display #}
+                    {# don't show any id or organization_id columns #}
+                    {# IMPORTANT use table column names as the headings, replace _ with space via filter #}
+                    <!-- add th elements -->
+                    {% for r in rows[0] %}
+                    {% if r == 'organization_name' %}
+                        <!-- <th>Organization Name</th> -->
+                    {% elif r not in ['id', 'modified', 'created'] %}
+                        <th>{{ r }}</th>
+                    {% endif %}
+                    {% endfor %}
+                    <!-- keep this -->
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {# generate tr with td tags for each piece of data #}
+                {# don't show any id or organization_id columns #}
+                {# if the td is for website, display it as a link where the text is "website" and the url is the
+                website url #}
+                {# in the last column add the following
+                a view button that passes the organization id to donation search (this will be an organization's donation
+                list)
+                an edit button that passes the organization id to organization edit
+                a delete button that passes the organization id and the request args to the organization delete route
+                #}
+                <!-- iterate over rows and generate proper tr and td elements with the data -->
+                {% for r in rows %}
+                <tr>
+                    {% for key,value in r.items() %}
+                        {% if key not in ['id', 'modified', 'created'] %}
+                            <td>{{value}}</td> 
+                        {% endif %}
+                    {% endfor %}   
+                    <td>
+                        <a href="{{ url_for('netflixdata.view', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">View</a>
+                        <a href="{{ url_for('netflixdata.edit', id=r.get('id')) }}" class="btn btn-secondary btn-sm">Edit</a>
+                        <a href="{{ url_for('netflixdata.delete', id=r.get('id'), **request.args) }}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% else %}
+            <tbody>
+                <tr>
+                    <td colspan="100%">No results to show</td>
+                </tr>
+            </tbody>
+            {% endif %}
+        </table>
+    </div>
+   
 
 </div>
 {% endblock %}
