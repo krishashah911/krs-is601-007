@@ -20,7 +20,7 @@ def fetch():
                 print(result)
                 if result:
                     result = DictToObject(result)
-                    # result.change_percent = result.change_percent.replace("%","")
+
                     result = DB.insertOne(
                         """INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date)
                             VALUES (%s, %s, %s, %s, %s, %s, %s)
