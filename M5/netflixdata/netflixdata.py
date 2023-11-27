@@ -1,6 +1,6 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for
 from sql.db import DB  # Import your DB class
-from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm  # Import your NetflixdataForm class
+from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm , RatingsdataForm # Import your NetflixdataForm class
 from roles.permissions import admin_permission, users_permission
 
 netflixdata = Blueprint('netflixdata', __name__, url_prefix='/netflixdata', template_folder='templates')
@@ -60,6 +60,27 @@ def add():
             flash("Form has validation errors. Please check the fields.", "danger")
 
     return render_template("netflixdata_form.html", form=form, type="Create")
+
+# @netflixdata.route("/add_ratings", methods=["GET", "POST"])
+# @users_permission.require(http_exception=403)
+# def add_ratings():
+#     form = RatingsdataForm()    
+#     if request.method == "POST" and form.validate_on_submit():
+#         try:
+#             # Create a new rating in the database
+#             result = DB.insertOne(
+#                 "INSERT INTO IS601_Ratings (ratings, heading, comments) VALUES (%s, %s, %s, %s, %s, %s)",
+#                 form.title.data, form.title_type.data, form.netflix_id.data, form.synopsis.data, form.year.data, form.title_date.data
+#             )
+#             if result.status:
+#                 flash(f"Created netflix data record", "success")
+#         except Exception as e:
+#             flash(f"Error creating netflix record: {e}", "danger")
+#     else:
+#         if request.method == "POST":
+#             flash("Form has validation errors. Please check the fields.", "danger")
+
+#     return render_template("netflixdata_form.html", form=form, type="Create")
 
 @netflixdata.route("/edit", methods=["GET", "POST"])
 @admin_permission.require(http_exception=403)
@@ -160,21 +181,58 @@ def delete():
     return redirect(url_for("netflixdata.list", **args))
 
 @netflixdata.route("/view", methods=["GET"])
+@users_permission.require(http_exception=403)
 def view():
-    id = request.args.get("id")
-    if id is None:
-        flash("Missing ID", "danger")
-        return redirect(url_for("netflixdata.list"))
+    rows = []
+    query = """
+        SELECT
+        IS601_Ratings.id as 'id',
+        IS601_Ratings.watchlist_id as 'watchlist_id',
+        IS601_Ratings.ratings as 'ratings',
+        IS601_Ratings.heading as 'heading',
+        IS601_Ratings.comments as 'comments',
+        IS601_Watchlist.title as 'title',
+        IS601_Ratings.created as created,
+        IS601_Ratings.modified as modified
+        FROM
+        IS601_Ratings
+        LEFT JOIN
+        IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
+        WHERE 1=1
+    """
+
+    args = {}
+    allowed_columns = ["ratings", "heading", "comments", "created", "modified"]
+    w_id = request.args.get("watchlist_id")
+    ratings = request.args.get("ratings")
+    heading = request.args.get("heading")
+    comments = request.args.get("comments")
+    column = request.args.get("column")
+    order = request.args.get("order")
+    limit = request.args.get("limit",10)
+
     try:
-        result = DB.selectOne(
-            "SELECT title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date FROM IS601_Watchlist WHERE id = %s",
-            id
-        )
-        if result.status and result.row:
-            return render_template("netflixdata_view.html", netflixdata=result.row)
+        result = DB.selectAll(query, args)
+        if result.status:
+            rows = result.rows
+            # print(f"rows: {rows}")
         else:
-            flash("Netflix record not found", "danger")
+            flash("Error retrieving rating. Please try again.", "error")
     except Exception as e:
-        print(f"Netflix data error {e}")
-        flash("Error fetching netflix record", "danger")
-    return redirect(url_for("netflixdata.list"))
+        flash("An unexpected error occured. Please try again later.", "error")
+    
+    if w_id:
+        try:
+            result = DB.selectOne("SELECT title FROM IS601_Watchlist WHERE id = %s", w_id)
+            if result.status:
+                title = result.row.get("title")
+            else:
+                flash("An error occurred while fetching title. Please try again later.", "error")
+        except Exception as e:
+            print(f"Title name fetch error {e}")
+            flash("An error occurred while fetchingtitle name. Please try again later.", "danger")
+    else:
+        title = ""  
+
+    return render_template("netflixdata_view.html", title=title, rows=rows, allowed_columns=allowed_columns)
+    
