@@ -3,3 +3,4 @@ from flask_principal import Permission, RoleNeed
 
 # Create a permission with a single Need, in this case a RoleNeed.
 admin_permission = Permission(RoleNeed('Admin'))
+users_permission = Permission(RoleNeed('Users'))

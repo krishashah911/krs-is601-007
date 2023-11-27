@@ -4,11 +4,49 @@
 <!-- content -->
 {% block content %}
 {% from "_table_helper.html" import render_table %}
+{% from "sort_filter.html" import sort_filter %}
 {% set view = "netflixdata.view" %}
 {% set edit = "netflixdata.edit" %}
 {% set delete = "netflixdata.delete" %}
 <div class="container-fluid">
 
+    <form method="GET">
+        <div class="row">
+            <!--title name-->
+            <div class="col">
+                <label class="visually-hidden" for="title">title name</label>
+                <input type="text" class="form-control" id="title" name="title"
+                       placeholder="title name" value="{{ request.args.get('title') or ''}}">
+            </div>
+
+          
+            <!-- sort filter -->
+            {{ sort_filter(cols=[
+                ("id", "ID"),
+                ("title", "Title Name"),
+                ("title_type", "Title Type"),
+                ("netflix_id", "Netflix ID"),
+                ("year", "Release Year"),
+                ("modified", "Modified"),
+                ("created", "Created")
+            ]) }}            
+
+            <!--limit filter-->
+            <div class="col">
+                <label class="form-label visually-hidden" for="limit">Limit</label>
+                <input class="form-control" type="number" min="1" max="100" id="limit" name="limit"
+                    value="{{request.args.get('limit') or '10'}}" />
+            </div>
+            <div class="col">
+                <input type="submit" class="btn btn-danger" value="Filter" />
+            </div>
+            <div class="col">
+                <a href="?" class="btn btn-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
     {{ render_table(rows, "Netflix Content", [], view, edit, delete) }}
+
 </div>
 {% endblock %}

@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for
 from sql.db import DB  # Import your DB class
 from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm  # Import your NetflixdataForm class
-from roles.permissions import admin_permission
+from roles.permissions import admin_permission, users_permission
 
 netflixdata = Blueprint('netflixdata', __name__, url_prefix='/netflixdata', template_folder='templates')
 
@@ -20,18 +20,17 @@ def fetch():
                 result = DictToObject(result)
                 # result.change_percent = result.change_percent.replace("%","")
                 result = DB.insertOne(
-                    """INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, rating, `year`, imdb_id, title_date)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
                         ON DUPLICATE KEY UPDATE
                         title = VALUES(title),
                         title_type = VALUES(title_type),
                         netflix_id = VALUES(netflix_id),
                         synopsis = VALUES(synopsis),
-                        rating = VALUES(rating),
                         `year` = VALUES(`year`),
                         imdb_id = VALUES(imdb_id),
                         title_date = VALUES(title_date)""",
-                result.title, result.title_type, result.netflix_id, result.synopsis, result.rating, result.year, result.imdb_id, result.title_date
+                result.title, result.title_type, result.netflix_id, result.synopsis, result.year, result.imdb_id, result.title_date
                 )
                 if result.status:
                     flash(f"Loaded netflix data", "success")
@@ -42,20 +41,24 @@ def fetch():
     return render_template("netflixdata_search.html", form=form)
 
 @netflixdata.route("/add", methods=["GET", "POST"])
-# @admin_permission.require(http_exception=403)
+@admin_permission.require(http_exception=403)
 def add():
-    form = NetflixdataForm()
-    if form.validate_on_submit():
+    form = NetflixdataForm()    
+    if request.method == "POST" and form.validate_on_submit():
         try:
             # Create a new netflix record in the database
             result = DB.insertOne(
-                "INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, rating, `year`, imdb_id, title_date) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                form.title, form.title_type, form.netflix_id, form.synopsis, form.rating, form.year, form.imdb_id, form.title_date
+                "INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, `year`, title_date) VALUES (%s, %s, %s, %s, %s, %s)",
+                form.title.data, form.title_type.data, form.netflix_id.data, form.synopsis.data, form.year.data, form.title_date.data
             )
             if result.status:
                 flash(f"Created netflix data record", "success")
         except Exception as e:
             flash(f"Error creating netflix record: {e}", "danger")
+    else:
+        if request.method == "POST":
+            flash("Form has validation errors. Please check the fields.", "danger")
+
     return render_template("netflixdata_form.html", form=form, type="Create")
 
 @netflixdata.route("/edit", methods=["GET", "POST"])
@@ -66,20 +69,25 @@ def edit():
     if id is None:
         flash("Missing ID", "danger")
         return redirect(url_for("netflixdata.list"))
-    if form.validate_on_submit() and id:
+
+
+    if request.method == "POST" and form.validate_on_submit() and id:
         try:
             # Update the existing stock record in the database
             result = DB.insertOne(
-                "UPDATE IS601_Watchlist SET title = %s, title_type = %s, netflix_id = %s, synopsis = %s, rating = %s, year = %s, imdb_id = %s, title_date = %s WHERE id = %s",
-                form.title, form.title_type, form.netflix_id, form.synopsis, form.rating, form.year, form.imdb_id, form.title_date
+                "UPDATE IS601_Watchlist SET title = %s, title_type = %s, netflix_id = %s, synopsis = %s, year = %s, title_date = %s WHERE id = %s",
+                form.title.data, form.title_type.data, form.netflix_id.data, form.synopsis.data, form.year.data, form.title_date.data,id
             )
             if result.status:
                 flash(f"Updated netflix data record", "success")
         except Exception as e:
             flash(f"Error updating netflix record: {e}", "danger")
+    else:
+        if request.method == "POST":
+            flash("Form has validation errors. Please check the fields.", "danger")
     try:
         result = DB.selectOne(
-            "SELECT title, title_type, netflix_id, synopsis, rating, `year`, imdb_id, title_date FROM IS601_Watchlist WHERE id = %s",
+            "SELECT title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date FROM IS601_Watchlist WHERE id = %s",
             id
         )
         if result.status and result.row:
@@ -89,16 +97,48 @@ def edit():
     return render_template("netflixdata_form.html", form=form, type="Edit")
 
 @netflixdata.route("/list", methods=["GET"])
-# @admin_permission.require(http_exception=403)
 def list():
     rows = []
+    has_error = False
+
+    query = "SELECT id, title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date FROM IS601_Watchlist WHERE 1=1"
+    args = {}
+    allowed_columns = ["id", "title", "title_type", "netflix_id", "year", "created", "modified"]
+    title = request.args.get("title")
+    column = request.args.get("column")  
+    order = request.args.get("order")  
+    limit = request.args.get("limit", 10) 
+
+    if title:
+        query += " AND title LIKE %(title)s"
+        args["title"] = f"%{title}%"
+
+    if column and order:
+        if column in allowed_columns and order in ["asc", "desc"]:
+            query += f" ORDER BY {column} {order}"
+
     try:
-        result = DB.selectAll("SELECT id, title, title_type, netflix_id, synopsis, rating, `year`, imdb_id, title_date FROM IS601_Watchlist LIMIT 100")
-        if result.status and result.rows:
-            rows = result.rows
-    except Exception as e:
-        print(e)
-        flash("Error getting netflix records", "danger")
+        if limit:
+            limit = int(limit)
+            if 1 <= limit <= 100:
+                query += " LIMIT %(limit)s"
+                args["limit"] = limit
+            else:
+                flash("Limit must be between 1 and 100", "error")
+    except ValueError:
+        flash("Invalid limit value", "error")
+        has_error = True
+    if not has_error:
+        try:
+            result = DB.selectAll(query,args)
+            if result.status and result.rows:
+                rows = result.rows
+            else:
+                flash("No record found.","info")
+        except Exception as e:
+            print(e)
+            flash("Error getting netflix records", "danger")
+
     return render_template("netflixdata_list.html", rows=rows)
 
 @netflixdata.route("/delete", methods=["GET"])
@@ -127,7 +167,7 @@ def view():
         return redirect(url_for("netflixdata.list"))
     try:
         result = DB.selectOne(
-            "SELECT title, title_type, netflix_id, synopsis, rating, `year`, imdb_id, title_date FROM IS601_Watchlist WHERE id = %s",
+            "SELECT title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date FROM IS601_Watchlist WHERE id = %s",
             id
         )
         if result.status and result.row:
