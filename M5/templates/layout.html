@@ -34,7 +34,7 @@
 </head>
 
 <body>
-    <div id="header">
+    <div id="header" class = "fixed-top">
         {% include 'nav.html' %}
         {% include 'flash.html' %}
         <style>
@@ -42,9 +42,11 @@
                 text-transform: capitalize;
             }
         </style>
-        <br>
-        <br>
     </div>
+    <br>
+    <br>
+    <br>
+    <br>
     <div id="content" class="overflow-auto" style="height: 84vh">
         {% block content %}{% endblock %}</div>
     <br>

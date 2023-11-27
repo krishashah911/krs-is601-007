@@ -21,25 +21,44 @@ class Unogs(API):
         params["type"] = f"{type}"
         url = "/search/titles"
         resp = API.get(url, params)
+
+        all_results = []
         if "results" in resp:
             results = resp["results"]
 
-            # Extract the first result (assuming it's a dictionary)
-            if results and isinstance(results, list):
-                first_result = results[0]
-
+            # Loop through all results
+            for result in results:
                 # Rename keys and replace spaces with underscores
                 fixed = {}
-                for k, v in first_result.items():
+                for k, v in result.items():
                     if "." in k:
                         k = k.split(".")[1].strip()
                     fixed[k.replace(" ", "_")] = v
 
-                return fixed
+                all_results.append(fixed)
 
-        return {}
+        return all_results
+    
+        # if "results" in resp:
+        #     results = resp["results"]
+
+        #     # Extract the first result (assuming it's a dictionary)
+        #     if results and isinstance(results, list):
+        #         first_result = results[0]
+
+        #         # Rename keys and replace spaces with underscores
+        #         fixed = {}
+        #         for k, v in first_result.items():
+        #             if "." in k:
+        #                 k = k.split(".")[1].strip()
+        #             fixed[k.replace(" ", "_")] = v
+
+        #         return fixed
+
+        # return {}
 
 if __name__ == "__main__":
     # Assuming you have a utility function to handle API requests similar to the one used in the AlphaVantage example
-    resp = Unogs.get_movie_info("movie")
-    print(resp)
+    resp = Unogs.get_movie_info("series")
+    for result in resp:
+        print(result)

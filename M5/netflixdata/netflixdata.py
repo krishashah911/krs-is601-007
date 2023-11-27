@@ -14,27 +14,29 @@ def fetch():
             from utils.netflixdata import Unogs
             from utils.lazy import DictToObject
             # Create a new netflixdata record in the database
-            result = Unogs.get_movie_info(form.title_type.data)
-            print(result)
-            if result:
-                result = DictToObject(result)
-                # result.change_percent = result.change_percent.replace("%","")
-                result = DB.insertOne(
-                    """INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                        ON DUPLICATE KEY UPDATE
-                        title = VALUES(title),
-                        title_type = VALUES(title_type),
-                        netflix_id = VALUES(netflix_id),
-                        synopsis = VALUES(synopsis),
-                        `year` = VALUES(`year`),
-                        imdb_id = VALUES(imdb_id),
-                        title_date = VALUES(title_date)""",
-                result.title, result.title_type, result.netflix_id, result.synopsis, result.year, result.imdb_id, result.title_date
-                )
-                if result.status:
-                    flash(f"Loaded netflix data", "success")
-                    print("OKKK")
+            results = Unogs.get_movie_info(form.title_type.data)
+
+            for result in results:
+                print(result)
+                if result:
+                    result = DictToObject(result)
+                    # result.change_percent = result.change_percent.replace("%","")
+                    result = DB.insertOne(
+                        """INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            ON DUPLICATE KEY UPDATE
+                            title = VALUES(title),
+                            title_type = VALUES(title_type),
+                            netflix_id = VALUES(netflix_id),
+                            synopsis = VALUES(synopsis),
+                            `year` = VALUES(`year`),
+                            imdb_id = VALUES(imdb_id),
+                            title_date = VALUES(title_date)""",
+                    result.title, result.title_type, result.netflix_id, result.synopsis, result.year, result.imdb_id, result.title_date
+                    )
+                    if result.status:
+                        flash(f"Loaded netflix data", "success")
+                        print("OKKK")
         except Exception as e:
             flash(f"Error loading netflix record: {e}", "danger")
             print("Not OK")
