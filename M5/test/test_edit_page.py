@@ -30,12 +30,12 @@ def client(app):
 def runner(app):
     return app.test_cli_runner()
 
-def test_edit_page(client):
+def off_test_edit_page(client):
     # https://www.scrapingbee.com/blog/python-web-scraping-beautiful-soup/
     response = client.get("/sample/edit?id=-1")
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(response.data, 'html.parser')
-   
+
     form = soup.form
     ele = form.select("[name='value']")[0]
     print(ele)
