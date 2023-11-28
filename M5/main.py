@@ -39,6 +39,8 @@ def create_app(config_filename=''):
         app.register_blueprint(auth)
         from roles.roles import roles
         app.register_blueprint(roles)
+        from netflixdata.netflixdata import netflixdata
+        app.register_blueprint(netflixdata)
 
         # load the extension
         principals = Principal(app) # must be defined/initialized for identity to work (flask_principal)
@@ -79,6 +81,19 @@ def create_app(config_filename=''):
             if hasattr(current_user, 'roles'):
                 for role in current_user.roles:
                     identity.provides.add(RoleNeed(role.name))
+
+        @app.template_global()
+        def get_list():
+            from sql.db import DB
+            try:
+                print("get netflix list")
+                # note this triggers for GET and POST
+                result = DB.selectAll("SELECT distinct id, title FROM IS601_Watchlist")
+                if result.status:
+                    return result.rows or []
+            except Exception as e:
+                print(e)
+            return []
         return app
 
 

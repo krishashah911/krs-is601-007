@@ -11,7 +11,7 @@
     <form id="apply" method="POST"
         action="{{url_for('roles.apply')}}?email={{request.args.get('email', '')}}">
         <!-- will map elements via form attribute on the element itself by form id -->
-        <input type="submit" class="btn btn-primary" value="Apply Roles" />
+        <input type="submit" class="btn btn-danger" value="Apply Roles" />
     </form>
     <table class="table">
         <thead>
