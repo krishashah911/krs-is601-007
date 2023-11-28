@@ -4,7 +4,8 @@ from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm , Ratingsda
 from roles.permissions import admin_permission, users_permission
 
 netflixdata = Blueprint('netflixdata', __name__, url_prefix='/netflixdata', template_folder='templates')
-
+## UCID: krs
+## Date: 11/27/23
 @netflixdata.route("/fetch", methods=["GET", "POST"])
 @admin_permission.require(http_exception=403)
 def fetch():
@@ -15,12 +16,10 @@ def fetch():
             from utils.lazy import DictToObject
             # Create a new netflixdata record in the database
             results = Unogs.get_movie_info(form.title_type.data)
-
             for result in results:
                 print(result)
                 if result:
                     result = DictToObject(result)
-
                     result = DB.insertOne(
                         """INSERT INTO IS601_Watchlist (title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date)
                             VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -42,6 +41,8 @@ def fetch():
             print("Not OK")
     return render_template("netflixdata_search.html", form=form)
 
+## UCID: krs
+## Date: 11/27/23
 @netflixdata.route("/add", methods=["GET", "POST"])
 @admin_permission.require(http_exception=403)
 def add():
