@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block title %}Edit Ratings{% endblock %}
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+
+<div class="container-fluid">
+    <div class="h1">Edit Ratings</div>
+    <div>
+        <form method="POST">
+            {% for field in form %}
+            {% if field.name != 'csrf_token' %}
+            {{ render_field(field) }}
+            {% endif %}
+            {% endfor %}
+            {{ form.hidden_tag() }}
+            {{ form.submit(class="btn btn-danger") }}
+        </form>
+    </div>
+</div>
+{% endblock %}

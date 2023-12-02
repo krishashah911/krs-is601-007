@@ -86,7 +86,7 @@
                         {% endif %}
                     {% endfor %}   
                     <td>
-                        <a href="{{ url_for('netflixdata.view', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">View</a>
+                        <a href="{{ url_for('netflixdata.view', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">View Ratings</a>
                         <a href="{{ url_for('netflixdata.edit', id=r.get('id')) }}" class="btn btn-secondary btn-sm">Edit</a>
                         <a href="{{ url_for('netflixdata.delete', id=r.get('id'), **request.args) }}" class="btn btn-danger btn-sm">Delete</a>
                     </td>

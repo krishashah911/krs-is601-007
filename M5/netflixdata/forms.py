@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, DecimalField, validators, SubmitField
+from wtforms import StringField, DecimalField, IntegerField, validators, SubmitField, SelectField
 from wtforms import ValidationError
+from netflixdata.models import Netflixdata
 
 def validate_not_empty(form, field):
     if not field.data or field.data.strip() == '':
@@ -23,6 +24,12 @@ class NetflixdataForm(FlaskForm):
     submit = SubmitField("Save")
 
 class RatingsdataForm(FlaskForm):
+
+    #watchlist_choices = [(watchlist.id, watchlist.title) for watchlist in Netflixdata.query.all()]
+
+    #watchlist_id = SelectField('Watchlist', choices=watchlist_choices, coerce=int)
+    #user_id = IntegerField('User Id')
+    watchlist_id = IntegerField('Watchlist')
     ratings = DecimalField('Ratings', [validators.NumberRange(min=0, max=5)])
     heading = StringField('Heading', [validators.Length(min=1, max=50)])
     comments = StringField('Comments') 
