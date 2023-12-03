@@ -199,6 +199,64 @@ def list():
 
     return render_template("netflixdata_list.html", rows=rows)
 
+@netflixdata.route("/manage_ratings", methods=["GET"])
+@admin_permission.require(http_exception=403)
+def manage_ratings():
+    title = ""
+    rows = []
+    has_error = False
+    query = """
+        SELECT
+        IS601_Watchlist.id as 'watchlist_id',
+        IS601_Watchlist.title as 'title',
+        (SELECT COUNT(*) FROM IS601_Ratings WHERE IS601_Watchlist.id = IS601_Ratings.watchlist_id) as total_ratings,
+        IS601_Watchlist.created as created,
+        IS601_Watchlist.modified as modified
+        FROM
+        IS601_Watchlist
+        WHERE 1=1
+    """
+
+    args = {}
+    allowed_columns = ["watchlist_id","title", "created", "modified"]
+    watchlist_id = request.args.get("watchlist_id")
+    title = request.args.get("title")
+    column = request.args.get("column")  
+    order = request.args.get("order")  
+    limit = request.args.get("limit", 10) 
+
+    if watchlist_id:
+        query += " AND IS601_Watchlist.id = %(watchlist_id)s"
+        args["watchlist_id"] = watchlist_id
+
+    if column and order:
+        if column in allowed_columns and order in ["asc", "desc"]:
+            query += f" ORDER BY {column} {order}"
+
+    try:
+        if limit:
+            limit = int(limit)
+            if 1 <= limit <= 100:
+                query += " LIMIT %(limit)s"
+                args["limit"] = limit
+            else:
+                flash("Limit must be between 1 and 100", "error")
+    except ValueError:
+        flash("Invalid limit value", "error")
+        has_error = True
+    if not has_error:
+        try:
+            result = DB.selectAll(query,args)
+            if result.status and result.rows:
+                rows = result.rows
+            else:
+                flash("No record found.","info")
+        except Exception as e:
+            print(e)
+            flash("Error getting netflix ratings", "danger")
+
+    return render_template("manage_ratings.html", rows=rows)
+
 @netflixdata.route("/delete", methods=["GET"])
 @admin_permission.require(http_exception=403)
 def delete():
@@ -320,6 +378,93 @@ def view():
         title = ""  
 
     return render_template("netflixdata_view.html", title=title, rows=rows, allowed_columns=allowed_columns)
+
+@netflixdata.route("/view_by_title", methods=["GET"])
+@admin_permission.require(http_exception=403)
+def view_by_title():
+    rows = []
+    title = ""
+    has_error = False
+
+    query = """
+        SELECT
+        IS601_Ratings.id as 'id',
+        IS601_Ratings.watchlist_id as 'watchlist_id',
+        IS601_Ratings.user_id as 'user_id' ,
+        IS601_Ratings.ratings as 'ratings',
+        IS601_Ratings.heading as 'heading',
+        IS601_Ratings.comments as 'comments',
+        IS601_Watchlist.title as 'title',
+        IS601_Ratings.created as created,
+        IS601_Ratings.modified as modified
+        FROM
+        IS601_Ratings
+        LEFT JOIN
+        IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
+        WHERE 1=1
+    """
+    args = {} # <--- add values to replace %s/%(named)s placeholders
+    allowed_columns = ["user_id", "ratings", "heading", "comments", "created", "modified"]
+    
+    # TODO search-2 get fn, ln, email, organization_id, column, order, limit from request args
+    # UCID: krs
+    # Date: 11/21/23
+    id = request.args.get("id")
+    watchlist_id = request.args.get("watchlist_id")
+    ratings = request.args.get("ratings")
+    heading = request.args.get("heading")
+    comments = request.args.get("comments")
+    user_id = request.args.get("user_id")
+    column = request.args.get("column")  
+    order = request.args.get("order")  
+    limit = request.args.get("limit", 10) 
+    
+
+    if column and order:
+        if column in allowed_columns and order in ["asc", "desc"]:
+            query += f" ORDER BY {column} {order}"
+
+    try:
+        if limit:
+            limit = int(limit)
+            if 1 <= limit <= 100:
+                query += " LIMIT %(limit)s"
+                args["limit"] = limit
+            else:
+                flash("Limit must be between 1 and 100", "error")
+    except ValueError:
+        flash("Invalid limit value", "error")
+        has_error = True
+    
+    print("query",query)
+    print("args", args)
+
+    if not has_error:
+        try:
+            result = DB.selectAll(query, args)
+            if result.status:
+                rows = result.rows
+                # print(f"rows: {rows}")
+            else:
+                flash("Error retrieving records. Please try again.", "error")
+        except Exception as e:
+            flash("An unexpected error occured. Please try again later.", "error")
+
+    if watchlist_id:
+        try:
+            result = DB.selectOne("SELECT title FROM IS601_Watchlist WHERE id = %s", watchlist_id)
+            if result.status:
+                watchlist_id = result.row.get("id")
+                title = result.row.get("title")
+            else:
+                flash("An error occurred while fetching title. Please try again later.", "error")
+        except Exception as e:
+            print(f"Title name fetch error {e}")
+            flash("An error occurred while fetching title name. Please try again later.", "danger")
+    else:
+        title = ""  
+
+    return render_template("view_by_title.html", title=title, rows=rows, allowed_columns=allowed_columns)
 
 @netflixdata.route("/view_my_ratings", methods=["GET"])
 @users_permission.require(http_exception=403)

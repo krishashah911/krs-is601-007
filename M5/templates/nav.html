@@ -58,10 +58,10 @@
                 ] %}
                 {{dropdown_nav("Roles", roles)}}
                 
-                <!-- <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link"
-                        href="{{url_for('netflixdata.fetch')}}">Fetch Data</a>
-                </li> -->
+                        href="{{url_for('netflixdata.manage_ratings')}}">Manage Ratings</a>
+                </li>
                 {% set netflixdata = [
                     ("netflixdata.add", "Add"),
                     ("netflixdata.fetch", "Fetch"),
