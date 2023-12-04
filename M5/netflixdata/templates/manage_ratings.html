@@ -13,7 +13,7 @@
         <div class="row">
             <!--title name-->
             <div class="col">
-                <label class="visually-hidden" for="title">watchlist_id</label>
+                <label class="visually-hidden" for="watchlist_id">watchlist_id</label>
                 <input type="text" class="form-control" id="watchlist_id" name="watchlist_id"
                        placeholder="watchlist_id" value="{{ request.args.get('watchlist_id') or ''}}">
             </div>
@@ -62,16 +62,6 @@
                 </tr>
             </thead>
             <tbody>
-                {# generate tr with td tags for each piece of data #}
-                {# don't show any id or organization_id columns #}
-                {# if the td is for website, display it as a link where the text is "website" and the url is the
-                website url #}
-                {# in the last column add the following
-                a view button that passes the organization id to donation search (this will be an organization's donation
-                list)
-                an edit button that passes the organization id to organization edit
-                a delete button that passes the organization id and the request args to the organization delete route
-                #}
                 <!-- iterate over rows and generate proper tr and td elements with the data -->
                 {% for r in rows %}
                 <tr>

@@ -69,7 +69,15 @@
             <tr>
                 {% for key, value in r.items() %}
                     {% if key not in [ 'id', 'modified', 'created'] %}
-                        <td>{{ value }}</td>
+                        <td> {% if key == 'ratings' %}
+                            <div class="star-rating" style="color: gold;">
+                                {% for _ in range(value|round|int) %}
+                                    &#9733; <!-- Unicode character for a filled star -->
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ value }}
+                        {% endif %} </td>
                     {% endif %}
                 {% endfor %}
                 <td><a href="{{ url_for('netflixdata.edit_rating', id=r.get('id')) }}" class="btn btn-secondary btn-sm">Edit</a>

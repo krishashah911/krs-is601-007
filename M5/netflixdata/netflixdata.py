@@ -1,6 +1,6 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for
 from sql.db import DB  # Import your DB class
-from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm , RatingsdataForm # Import your NetflixdataForm class
+from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm , RatingsdataForm, EditRatingsdataForm # Import your NetflixdataForm class
 from roles.permissions import admin_permission, users_permission
 
 netflixdata = Blueprint('netflixdata', __name__, url_prefix='/netflixdata', template_folder='templates')
@@ -150,6 +150,39 @@ def edit_rating():
         )
         if result.status and result.row:
             form = RatingsdataForm(data=result.row)
+    except Exception as e:
+        flash("Error fetching ratings", "danger")
+    return render_template("edit_ratings.html", form=form, type="Edit")
+
+@netflixdata.route("/admin_edit_rating", methods=["GET", "POST"])
+@admin_permission.require(http_exception=403)
+def admin_edit_rating():
+    form = EditRatingsdataForm()
+    id = request.args.get("id")
+    if id is None:
+        flash("Missing ID", "danger")
+        return redirect(url_for("netflixdata.view_my_ratings"))
+
+    if request.method == "POST" and form.validate_on_submit() and id:
+        try:
+            # Update the existing stock record in the database
+            result = DB.insertOne(
+                "UPDATE IS601_Ratings SET user_id = %s, ratings = %s, heading = %s, comments = %s WHERE id = %s",
+                form.user_id.data, form.ratings.data, form.heading.data, form.comments.data, id
+            )
+            if result.status:
+                flash(f"Updated rating record", "success")
+        except Exception as e:
+            flash(f"Error updating rating record: {e}", "danger")
+    else:
+        if request.method == "POST":
+            flash("Form has validation errors. Please check the fields.", "danger")
+    try:
+        result = DB.selectOne(
+            "SELECT user_id, ratings, heading, comments FROM IS601_Ratings WHERE id = %s", id
+        )
+        if result.status and result.row:
+            form = EditRatingsdataForm(data=result.row)
     except Exception as e:
         flash("Error fetching ratings", "danger")
     return render_template("edit_ratings.html", form=form, type="Edit")
@@ -419,6 +452,12 @@ def view_by_title():
     order = request.args.get("order")  
     limit = request.args.get("limit", 10) 
     
+    if user_id:
+        query += " AND IS601_Ratings.user_id = %(user_id)s"
+        args["user_id"] = user_id
+    if ratings:
+        query += " AND IS601_Ratings.ratings = %(ratings)s"
+        args["ratings"] = ratings
 
     if column and order:
         if column in allowed_columns and order in ["asc", "desc"]:
@@ -554,3 +593,27 @@ def view_my_ratings():
         title = ""  
 
     return render_template("view_my_ratings.html", title=title, rows=rows, allowed_columns=allowed_columns)  
+
+@netflixdata.route("/user_profile", methods=["GET"])
+def user_profile():
+    user_id = request.args.get("user_id")
+    rows = []
+    has_error = False
+
+    query = "SELECT id, email, username, points FROM IS601_Users WHERE id=%s",user_id
+    args = {}
+    allowed_columns = ["id", "email", "username", "points", "created", "modified"]
+
+    if not has_error:
+        try:
+            result = DB.selectAll( "SELECT id, email, username, points FROM IS601_Users WHERE id=%s",user_id)
+            print(result)
+            if result.status and result.rows:
+                rows = result.rows
+            else:
+                flash("No record found.","info")
+        except Exception as e:
+            print(e)
+            flash("Error getting profile info", "danger")
+
+    return render_template("netflixdata_profile.html", rows=rows, user_id=user_id, allowed_columns=allowed_columns)

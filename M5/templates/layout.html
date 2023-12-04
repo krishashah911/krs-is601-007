@@ -28,9 +28,15 @@
             line-height: 60px;
         }
 
+        .star-rating {
+            display: inline-block;
+            font-size: 20px; /* Adjust the font size as needed */
+            color: gold; /* Default star color */
+        }
     </style>
     <title>{% block title %}{% endblock %} - Netflix</title>
     {% endblock %}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
 </head>
 
 <body>

@@ -64,7 +64,17 @@
             <tr>
                 {% for key, value in r.items() %}
                     {% if key not in ['id', 'watchlist_id', 'title', 'modified', 'created'] %}
-                        <td>{{ value }}</td>
+                        <td>
+                            {% if key == 'ratings' %}
+                            <div class="star-rating" style="color: gold;">
+                                {% for _ in range(value|round|int) %}
+                                    &#9733; <!-- Unicode character for a filled star -->
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ value }}
+                        {% endif %}   
+                        </td>
                     {% endif %}
                 {% endfor %}
                 <!-- <td><a href="#">Edit</a>

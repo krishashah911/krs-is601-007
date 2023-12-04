@@ -34,3 +34,10 @@ class RatingsdataForm(FlaskForm):
     heading = StringField('Heading', [validators.Length(min=1, max=50)])
     comments = StringField('Comments') 
     submit = SubmitField("Save")   
+
+class EditRatingsdataForm(FlaskForm):
+    user_id = IntegerField('User Id')
+    ratings = DecimalField('Ratings', [validators.NumberRange(min=0, max=5)])
+    heading = StringField('Heading', [validators.Length(min=1, max=50)])
+    comments = StringField('Comments') 
+    submit = SubmitField("Save") 
