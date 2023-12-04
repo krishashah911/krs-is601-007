@@ -2,10 +2,9 @@ from flask import Blueprint, flash, render_template, request, redirect, url_for
 from sql.db import DB  # Import your DB class
 from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm , RatingsdataForm, EditRatingsdataForm # Import your NetflixdataForm class
 from roles.permissions import admin_permission, users_permission
+from flask_login import current_user
 
 netflixdata = Blueprint('netflixdata', __name__, url_prefix='/netflixdata', template_folder='templates')
-## UCID: krs
-## Date: 11/27/23
 @netflixdata.route("/fetch", methods=["GET", "POST"])
 @admin_permission.require(http_exception=403)
 def fetch():
@@ -66,13 +65,14 @@ def add():
 
 @netflixdata.route("/add_ratings", methods=["GET", "POST"])
 def add_ratings():
+    user_id = current_user.get_id()
     form = RatingsdataForm()    
     if request.method == "POST" and form.validate_on_submit():
         try:
             # Create a new rating in the database
             result = DB.insertOne(
-                "INSERT INTO IS601_Ratings (watchlist_id, ratings, heading, comments) VALUES (%s, %s, %s, %s)",
-                form.watchlist_id.data, form.ratings.data, form.heading.data, form.comments.data
+                "INSERT INTO IS601_Ratings (watchlist_id, ratings, heading, comments, user_id) VALUES (%s, %s, %s, %s, %s)",
+                form.watchlist_id.data, form.ratings.data, form.heading.data, form.comments.data, user_id
             )
             if result.status:
                 flash(f"Added a rating", "success")
@@ -347,7 +347,7 @@ def view():
         IS601_Ratings
         LEFT JOIN
         IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
-        WHERE 1=1
+        WHERE IS601_Ratings.watchlist_id=1
     """
 
     args = {}
@@ -387,7 +387,7 @@ def view():
 
     if not has_error:
         try:
-            result = DB.selectAll(query, args)
+            result = DB.selectAll("SELECT IS601_Ratings.id as 'id', IS601_Ratings.watchlist_id as 'watchlist_id', IS601_Ratings.ratings as 'ratings', IS601_Ratings.heading as 'heading', IS601_Ratings.comments as 'comments', IS601_Watchlist.title as 'title', IS601_Ratings.created as created, IS601_Ratings.modified as modified FROM IS601_Ratings LEFT JOIN IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id WHERE IS601_Ratings.watchlist_id=%s", watchlist_id)
             if result.status:
                 rows = result.rows
                 # print(f"rows: {rows}")
@@ -480,7 +480,7 @@ def view_by_title():
 
     if not has_error:
         try:
-            result = DB.selectAll(query, args)
+            result = DB.selectAll("SELECT IS601_Ratings.id as 'id', IS601_Ratings.watchlist_id as 'watchlist_id', IS601_Ratings.user_id as 'user_id' , IS601_Ratings.ratings as 'ratings', IS601_Ratings.heading as 'heading', IS601_Ratings.comments as 'comments', IS601_Watchlist.title as 'title', IS601_Ratings.created as created, IS601_Ratings.modified as modified FROM IS601_Ratings LEFT JOIN IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id WHERE IS601_Ratings.watchlist_id=%s", watchlist_id)
             if result.status:
                 rows = result.rows
                 # print(f"rows: {rows}")
@@ -508,6 +508,7 @@ def view_by_title():
 @netflixdata.route("/view_my_ratings", methods=["GET"])
 @users_permission.require(http_exception=403)
 def view_my_ratings():
+    user_id = current_user.get_id()
     rows = []
     title = ""
     has_error = False
@@ -526,7 +527,7 @@ def view_my_ratings():
         IS601_Ratings
         LEFT JOIN
         IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
-        WHERE 1=1
+        WHERE IS601_Ratings.user_id=1
     """
 
     args = {}
@@ -569,7 +570,7 @@ def view_my_ratings():
 
     if not has_error:
         try:
-            result = DB.selectAll(query, args)
+            result = DB.selectAll("SELECT IS601_Ratings.id as 'id', IS601_Ratings.watchlist_id as 'watchlist_id', IS601_Watchlist.title as 'title', IS601_Ratings.ratings as 'ratings', IS601_Ratings.heading as 'heading', IS601_Ratings.comments as 'comments', IS601_Ratings.created as created, IS601_Ratings.modified as modified FROM IS601_Ratings LEFT JOIN IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id WHERE IS601_Ratings.user_id=%s", user_id)
             if result.status:
                 rows = result.rows
                 # print(f"rows: {rows}")

@@ -2,7 +2,7 @@ from flask_login import UserMixin
 from common.utils import JsonSerializable
 
 class User(UserMixin, JsonSerializable):
-    def __init__(self, id, email, username, roles = [], points = 0):
+    def __init__(self, id, email, username, points, roles = []):
         self.id = id
         self.email = email
         self.username = username
