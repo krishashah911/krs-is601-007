@@ -11,17 +11,23 @@
     <div class="h1 text-center">Manage Ratings</div>
     <form method="GET">
         <div class="row">
-            <!--title name-->
+
             <div class="col">
                 <label class="visually-hidden" for="watchlist_id">watchlist_id</label>
                 <input type="text" class="form-control" id="watchlist_id" name="watchlist_id"
                        placeholder="watchlist_id" value="{{ request.args.get('watchlist_id') or ''}}">
             </div>
-          
+
+            <div class="col">
+                <label class="visually-hidden" for="title">title</label>
+                <input type="text" class="form-control" id="title" name="title"
+                       placeholder="title" value="{{ request.args.get('title') or ''}}">
+            </div>
+
             <!-- sort filter -->
             {{ sort_filter(cols=[
-                ("watchlist_id", "ID"),
-                ("user_id", "User Id"),
+                ("watchlist_id", "Watchlist ID"),
+                ("title", "Title"),
                 ("modified", "Modified"),
                 ("created", "Created")
             ]) }}            

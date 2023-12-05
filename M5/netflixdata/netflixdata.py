@@ -66,13 +66,14 @@ def add():
 @netflixdata.route("/add_ratings", methods=["GET", "POST"])
 def add_ratings():
     user_id = current_user.get_id()
+    watchlist_id = request.args.get("watchlist_id")
     form = RatingsdataForm()    
     if request.method == "POST" and form.validate_on_submit():
         try:
             # Create a new rating in the database
             result = DB.insertOne(
                 "INSERT INTO IS601_Ratings (watchlist_id, ratings, heading, comments, user_id) VALUES (%s, %s, %s, %s, %s)",
-                form.watchlist_id.data, form.ratings.data, form.heading.data, form.comments.data, user_id
+                watchlist_id, form.ratings.data, form.heading.data, form.comments.data, user_id
             )
             if result.status:
                 flash(f"Added a rating", "success")
@@ -133,8 +134,8 @@ def edit_rating():
         try:
             # Update the existing stock record in the database
             result = DB.insertOne(
-                "UPDATE IS601_Ratings SET watchlist_id = %s, ratings = %s, heading = %s, comments = %s WHERE id = %s",
-                form.watchlist_id.data, form.ratings.data, form.heading.data, form.comments.data, id
+                "UPDATE IS601_Ratings SET ratings = %s, heading = %s, comments = %s WHERE id = %s",
+                form.ratings.data, form.heading.data, form.comments.data, id
             )
             if result.status:
                 flash(f"Updated rating record", "success")
@@ -145,7 +146,7 @@ def edit_rating():
             flash("Form has validation errors. Please check the fields.", "danger")
     try:
         result = DB.selectOne(
-            "SELECT watchlist_id, ratings, heading, comments FROM IS601_Ratings WHERE id = %s",
+            "SELECT ratings, heading, comments FROM IS601_Ratings WHERE id = %s",
             id
         )
         if result.status and result.row:
@@ -157,7 +158,7 @@ def edit_rating():
 @netflixdata.route("/admin_edit_rating", methods=["GET", "POST"])
 @admin_permission.require(http_exception=403)
 def admin_edit_rating():
-    form = EditRatingsdataForm()
+    form = RatingsdataForm()
     id = request.args.get("id")
     if id is None:
         flash("Missing ID", "danger")
@@ -167,8 +168,8 @@ def admin_edit_rating():
         try:
             # Update the existing stock record in the database
             result = DB.insertOne(
-                "UPDATE IS601_Ratings SET user_id = %s, ratings = %s, heading = %s, comments = %s WHERE id = %s",
-                form.user_id.data, form.ratings.data, form.heading.data, form.comments.data, id
+                "UPDATE IS601_Ratings SET ratings = %s, heading = %s, comments = %s WHERE id = %s",
+                form.ratings.data, form.heading.data, form.comments.data, id
             )
             if result.status:
                 flash(f"Updated rating record", "success")
@@ -179,10 +180,10 @@ def admin_edit_rating():
             flash("Form has validation errors. Please check the fields.", "danger")
     try:
         result = DB.selectOne(
-            "SELECT user_id, ratings, heading, comments FROM IS601_Ratings WHERE id = %s", id
+            "SELECT ratings, heading, comments FROM IS601_Ratings WHERE id = %s", id
         )
         if result.status and result.row:
-            form = EditRatingsdataForm(data=result.row)
+            form = RatingsdataForm(data=result.row)
     except Exception as e:
         flash("Error fetching ratings", "danger")
     return render_template("edit_ratings.html", form=form, type="Edit")
@@ -261,6 +262,10 @@ def manage_ratings():
     if watchlist_id:
         query += " AND IS601_Watchlist.id = %(watchlist_id)s"
         args["watchlist_id"] = watchlist_id
+
+    if title:
+        query += " AND IS601_Watchlist.title = %(title)s"
+        args["title"] = title
 
     if column and order:
         if column in allowed_columns and order in ["asc", "desc"]:
@@ -361,12 +366,9 @@ def view():
     order = request.args.get("order")
     limit = request.args.get("limit",10)
     
-
-
     if ratings:
         query += " AND IS601_Ratings.ratings = %(ratings)s"
         args["ratings"] = ratings
-
 
     if column and order:
         if column in allowed_columns and order in ["asc", "desc"]:
@@ -424,6 +426,7 @@ def view_by_title():
         IS601_Ratings.id as 'id',
         IS601_Ratings.watchlist_id as 'watchlist_id',
         IS601_Ratings.user_id as 'user_id' ,
+        IS601_Users.username as 'username' ,
         IS601_Ratings.ratings as 'ratings',
         IS601_Ratings.heading as 'heading',
         IS601_Ratings.comments as 'comments',
@@ -434,20 +437,21 @@ def view_by_title():
         IS601_Ratings
         LEFT JOIN
         IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
-        WHERE 1=1
+        LEFT JOIN 
+        IS601_Users ON IS601_Ratings.user_id = IS601_Users.id
+        WHERE IS601_Ratings.watchlist_id = '{watchlist_id}'
     """
+
     args = {} # <--- add values to replace %s/%(named)s placeholders
-    allowed_columns = ["user_id", "ratings", "heading", "comments", "created", "modified"]
+    allowed_columns = ["user_id","username", "ratings", "heading", "comments", "created", "modified"]
     
-    # TODO search-2 get fn, ln, email, organization_id, column, order, limit from request args
-    # UCID: krs
-    # Date: 11/21/23
     id = request.args.get("id")
     watchlist_id = request.args.get("watchlist_id")
     ratings = request.args.get("ratings")
     heading = request.args.get("heading")
     comments = request.args.get("comments")
     user_id = request.args.get("user_id")
+    username = request.args.get("username")
     column = request.args.get("column")  
     order = request.args.get("order")  
     limit = request.args.get("limit", 10) 
@@ -455,6 +459,11 @@ def view_by_title():
     if user_id:
         query += " AND IS601_Ratings.user_id = %(user_id)s"
         args["user_id"] = user_id
+
+    if username:
+        query += " AND IS601_Users.username = %(username)s"
+        args["username"] = username
+
     if ratings:
         query += " AND IS601_Ratings.ratings = %(ratings)s"
         args["ratings"] = ratings
@@ -475,12 +484,12 @@ def view_by_title():
         flash("Invalid limit value", "error")
         has_error = True
     
-    print("query",query)
-    print("args", args)
+    #print("query",query)
+    #print("args", args)
 
     if not has_error:
         try:
-            result = DB.selectAll("SELECT IS601_Ratings.id as 'id', IS601_Ratings.watchlist_id as 'watchlist_id', IS601_Ratings.user_id as 'user_id' , IS601_Ratings.ratings as 'ratings', IS601_Ratings.heading as 'heading', IS601_Ratings.comments as 'comments', IS601_Watchlist.title as 'title', IS601_Ratings.created as created, IS601_Ratings.modified as modified FROM IS601_Ratings LEFT JOIN IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id WHERE IS601_Ratings.watchlist_id=%s", watchlist_id)
+            result = DB.selectAll("SELECT IS601_Ratings.id as 'id', IS601_Ratings.watchlist_id as 'watchlist_id', IS601_Ratings.user_id as 'user_id' ,IS601_Users.username as 'username', IS601_Ratings.ratings as 'ratings', IS601_Ratings.heading as 'heading', IS601_Ratings.comments as 'comments', IS601_Ratings.created as created, IS601_Ratings.modified as modified FROM IS601_Ratings LEFT JOIN IS601_Users ON IS601_Ratings.user_id = IS601_Users.id WHERE IS601_Ratings.watchlist_id=%s", watchlist_id)
             if result.status:
                 rows = result.rows
                 # print(f"rows: {rows}")
@@ -597,17 +606,17 @@ def view_my_ratings():
 
 @netflixdata.route("/user_profile", methods=["GET"])
 def user_profile():
-    user_id = request.args.get("user_id")
+    username = request.args.get("username")
     rows = []
     has_error = False
 
-    query = "SELECT id, email, username, points FROM IS601_Users WHERE id=%s",user_id
+    query = "SELECT id, email, username, points FROM IS601_Users WHERE username=%s",username
     args = {}
     allowed_columns = ["id", "email", "username", "points", "created", "modified"]
 
     if not has_error:
         try:
-            result = DB.selectAll( "SELECT id, email, username, points FROM IS601_Users WHERE id=%s",user_id)
+            result = DB.selectAll( "SELECT id, email, username, points FROM IS601_Users WHERE username=%s",username)
             print(result)
             if result.status and result.rows:
                 rows = result.rows
@@ -617,4 +626,4 @@ def user_profile():
             print(e)
             flash("Error getting profile info", "danger")
 
-    return render_template("netflixdata_profile.html", rows=rows, user_id=user_id, allowed_columns=allowed_columns)
+    return render_template("netflixdata_profile.html", rows=rows, username=username, allowed_columns=allowed_columns)

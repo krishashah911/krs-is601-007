@@ -29,7 +29,7 @@ class RatingsdataForm(FlaskForm):
 
     #watchlist_id = SelectField('Watchlist', choices=watchlist_choices, coerce=int)
     #user_id = IntegerField('User Id')
-    watchlist_id = IntegerField('Watchlist')
+    #watchlist_id = IntegerField('Watchlist')
     ratings = DecimalField('Ratings', [validators.NumberRange(min=0, max=5)])
     heading = StringField('Heading', [validators.Length(min=1, max=50)])
     comments = StringField('Comments') 
