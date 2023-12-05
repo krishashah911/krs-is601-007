@@ -76,6 +76,8 @@ def add_ratings():
                 watchlist_id, form.ratings.data, form.heading.data, form.comments.data, user_id
             )
             if result.status:
+                update_points_query = "UPDATE IS601_Users SET points = points + 5 WHERE id = %s"
+                DB.update(update_points_query, user_id)
                 flash(f"Added a rating", "success")
         except Exception as e:
             flash(f"Error adding a rating: {e}", "danger")
@@ -320,9 +322,14 @@ def delete_rating():
     args = {**request.args}
     if id:
         try:
+            user_id_result = DB.selectOne("SELECT user_id FROM IS601_Ratings WHERE id = %s", id)
+            if user_id_result.status and user_id_result.row:
+                user_id = user_id_result.row.get("user_id")
             # Delete the rating from the database
             result = DB.delete("DELETE FROM IS601_Ratings WHERE id = %s", id)
             if result.status:
+                update_points_query = "UPDATE IS601_Users SET points = GREATEST(0, points - 5) WHERE id = %s"
+                DB.update(update_points_query, user_id)
                 flash("Deleted rating", "success")
         except Exception as e:
             flash(f"Error deleting rating: {e}", "danger")
