@@ -24,6 +24,12 @@
                        placeholder="title" value="{{ request.args.get('title') or ''}}">
             </div>
 
+            <div class="col">
+                <label class="visually-hidden" for="total_ratings">total_ratings</label>
+                <input type="text" class="form-control" id="total_ratings" name="total_ratings"
+                       placeholder="total_ratings" value="{{ request.args.get('total_ratings') or ''}}">
+            </div>
+
             <!-- sort filter -->
             {{ sort_filter(cols=[
                 ("watchlist_id", "Watchlist ID"),

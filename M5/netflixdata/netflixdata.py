@@ -254,9 +254,10 @@ def manage_ratings():
     """
 
     args = {}
-    allowed_columns = ["watchlist_id","title", "created", "modified"]
+    allowed_columns = ["watchlist_id", "title", "total_ratings", "created", "modified"]
     watchlist_id = request.args.get("watchlist_id")
     title = request.args.get("title")
+    total_ratings = request.args.get("total_ratings")
     column = request.args.get("column")  
     order = request.args.get("order")  
     limit = request.args.get("limit", 10) 
@@ -264,6 +265,10 @@ def manage_ratings():
     if watchlist_id:
         query += " AND IS601_Watchlist.id = %(watchlist_id)s"
         args["watchlist_id"] = watchlist_id
+
+    if total_ratings:
+        query += " AND (SELECT COUNT(*) FROM IS601_Ratings WHERE IS601_Watchlist.id = IS601_Ratings.watchlist_id) = %(total_ratings)s"
+        args["total_ratings"] = total_ratings
 
     if title:
         query += " AND IS601_Watchlist.title = %(title)s"
@@ -521,6 +526,8 @@ def view_by_title():
 
     return render_template("view_by_title.html", title=title, rows=rows, allowed_columns=allowed_columns)
 
+### UCID: krs
+### Date: 12/05/23
 @netflixdata.route("/view_my_ratings", methods=["GET"])
 @users_permission.require(http_exception=403)
 def view_my_ratings():
@@ -543,7 +550,7 @@ def view_my_ratings():
         IS601_Ratings
         LEFT JOIN
         IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
-        WHERE IS601_Ratings.user_id=1
+        WHERE IS601_Ratings.user_id=%s
     """
 
     args = {}
