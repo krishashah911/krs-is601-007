@@ -42,6 +42,11 @@
                     <a class="nav-link"
                         href="{{url_for('netflixdata.list')}}">Netflix Data</a>
                 </li>
+
+                {% set netflixdata = [
+                    ("netflixdata.view_my_ratings", "View My Ratings"),
+                    ] %}
+                    {{dropdown_nav("Ratings", netflixdata)}}
                 
                 <!-- roles nav (requires admin )-->
                 {% if current_user.has_role("Admin") %}
@@ -52,10 +57,10 @@
                 ] %}
                 {{dropdown_nav("Roles", roles)}}
                 
-                <!-- <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link"
-                        href="{{url_for('netflixdata.fetch')}}">Fetch Data</a>
-                </li> -->
+                        href="{{url_for('netflixdata.manage_ratings')}}">Manage Ratings</a>
+                </li>
                 {% set netflixdata = [
                     ("netflixdata.add", "Add"),
                     ("netflixdata.fetch", "Fetch"),
@@ -70,6 +75,11 @@
                 {% endif %}
 
             </ul>
+            {% if current_user.is_authenticated %}
+            <span class="navbar-text">
+                Points: {{current_user.get_points() or 0}}
+            </span>
+            {% endif %}
         </div>
     </div>
 </nav>

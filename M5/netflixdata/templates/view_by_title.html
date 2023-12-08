@@ -10,7 +10,18 @@
     
     <form method="GET">
         <div class="row">
-            <!--title name-->
+            <!-- <div class="col">
+                <label class="visually-hidden" for="user_id">user id</label>
+                <input type="text" class="form-control" id="user_id" name="user_id"
+                       placeholder="user id" value="{{ request.args.get('user_id') or ''}}">
+            </div> -->
+
+            <div class="col">
+                <label class="visually-hidden" for="username">username</label>
+                <input type="text" class="form-control" id="username" name="username"
+                       placeholder="username" value="{{ request.args.get('username') or ''}}">
+            </div>
+
             <div class="col">
                 <label class="visually-hidden" for="ratings">ratings</label>
                 <input type="text" class="form-control" id="ratings" name="ratings"
@@ -48,14 +59,14 @@
             <tr class="text-capitalize">
                 <!-- add th elements -->
                 {% for r in rows[0] %}
-                    {% if r == 'title' %}
-                        <!-- <th>Title</th> -->
-                    {% elif r not in ['id', 'watchlist_id', 'title', 'modified', 'created'] %}
+                    {% if r == 'username' %}
+                        <th>Username</th>
+                    {% elif r not in ['id', 'user_id', 'watchlist_id', 'title', 'modified', 'created'] %}
                         <th>{{ r }}</th>
                     {% endif %}
                 {% endfor %}
                 <!-- keep this -->
-                <!-- <th>Actions</th> -->
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -63,9 +74,14 @@
             {% for r in rows %}
             <tr>
                 {% for key, value in r.items() %}
-                    {% if key not in ['id', 'watchlist_id', 'title', 'modified', 'created'] %}
-                        <td>
-                            {% if key == 'ratings' %}
+                {% if key == 'username' %}
+                <td>
+                    <a href="{{ url_for('netflixdata.user_profile', username=value) }}">
+                        {{ value }}
+                    </a>
+                </td>
+                    {% elif key not in ['id', 'user_id', 'watchlist_id', 'title', 'modified', 'created'] %}
+                        <td> {% if key == 'ratings' %}
                             <div class="star-rating" style="color: gold;">
                                 {% for _ in range(value|round|int) %}
                                     &#9733; <!-- Unicode character for a filled star -->
@@ -73,15 +89,14 @@
                             </div>
                         {% else %}
                             {{ value }}
-                        {% endif %}   
-                        </td>
+                        {% endif %} </td>
                     {% endif %}
                 {% endfor %}
-                <!-- <td><a href="#">Edit</a>
-                    {# **request.args spreads the key value pairs to be part of the url#}
-                    {# the idea is to pass it to the next route #}
-                    <a href="#">Delete</a>
-                </td> -->
+                <td>
+                    <a href="{{ url_for('netflixdata.admin_add_rating', user_id=r.get('user_id'), id=r.get('id'), **request.args) }}" class="btn btn-secondary btn-sm">Add</a>
+                    <a href="{{ url_for('netflixdata.admin_edit_rating', id=r.get('id'), **request.args) }}" class="btn btn-secondary btn-sm">Edit</a>
+                    <a href="{{ url_for('netflixdata.delete_rating', id=r.get('id'), **request.args) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete?')">Delete</a>
+                </td>
         </tr>
             {% endfor %}
         </tbody>
@@ -93,7 +108,6 @@
         </tbody>
         {% endif %}
     </table>
-    
-    <a href="{{ url_for('netflixdata.list') }}" class="btn btn-secondary">Back</a>
+    <a href="{{ url_for('netflixdata.manage_ratings') }}" class="btn btn-secondary">Back</a>
 </div>
 {% endblock %}

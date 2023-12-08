@@ -1,11 +1,10 @@
 from flask import Blueprint, flash, render_template, request, redirect, url_for
 from sql.db import DB  # Import your DB class
-from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm , RatingsdataForm # Import your NetflixdataForm class
+from netflixdata.forms import NetflixdataForm, NetflixdataSearchForm , RatingsdataForm, EditRatingsdataForm # Import your NetflixdataForm class
 from roles.permissions import admin_permission, users_permission
+from flask_login import current_user
 
 netflixdata = Blueprint('netflixdata', __name__, url_prefix='/netflixdata', template_folder='templates')
-## UCID: krs
-## Date: 11/27/23
 @netflixdata.route("/fetch", methods=["GET", "POST"])
 @admin_permission.require(http_exception=403)
 def fetch():
@@ -64,26 +63,54 @@ def add():
 
     return render_template("netflixdata_form.html", form=form, type="Create")
 
-# @netflixdata.route("/add_ratings", methods=["GET", "POST"])
-# @users_permission.require(http_exception=403)
-# def add_ratings():
-#     form = RatingsdataForm()    
-#     if request.method == "POST" and form.validate_on_submit():
-#         try:
-#             # Create a new rating in the database
-#             result = DB.insertOne(
-#                 "INSERT INTO IS601_Ratings (ratings, heading, comments) VALUES (%s, %s, %s, %s, %s, %s)",
-#                 form.title.data, form.title_type.data, form.netflix_id.data, form.synopsis.data, form.year.data, form.title_date.data
-#             )
-#             if result.status:
-#                 flash(f"Created netflix data record", "success")
-#         except Exception as e:
-#             flash(f"Error creating netflix record: {e}", "danger")
-#     else:
-#         if request.method == "POST":
-#             flash("Form has validation errors. Please check the fields.", "danger")
+@netflixdata.route("/add_ratings", methods=["GET", "POST"])
+def add_ratings():
+    user_id = current_user.get_id()
+    watchlist_id = request.args.get("watchlist_id")
+    form = RatingsdataForm()    
+    if request.method == "POST" and form.validate_on_submit():
+        try:
+            # Create a new rating in the database
+            result = DB.insertOne(
+                "INSERT INTO IS601_Ratings (watchlist_id, ratings, heading, comments, user_id) VALUES (%s, %s, %s, %s, %s)",
+                watchlist_id, form.ratings.data, form.heading.data, form.comments.data, user_id
+            )
+            if result.status:
+                update_points_query = "UPDATE IS601_Users SET points = points + 5 WHERE id = %s"
+                DB.update(update_points_query, user_id)
+                flash(f"Added a rating", "success")
+        except Exception as e:
+            flash(f"Error adding a rating: {e}", "danger")
+    else:
+        if request.method == "POST":
+            flash("Form has validation errors. Please check the fields.", "danger")
 
-#     return render_template("netflixdata_form.html", form=form, type="Create")
+    return render_template("add_ratings.html", form=form, type="Create")
+
+@netflixdata.route("/admin_add_rating", methods=["GET", "POST"])
+@admin_permission.require(http_exception=403)
+def admin_add_rating():
+    user_id = request.args.get("user_id")
+    watchlist_id = request.args.get("watchlist_id")
+    form = RatingsdataForm()    
+    if request.method == "POST" and form.validate_on_submit():
+        try:
+            # Create a new rating in the database
+            result = DB.insertOne(
+                "INSERT INTO IS601_Ratings (watchlist_id, ratings, heading, comments, user_id) VALUES (%s, %s, %s, %s, %s)",
+                watchlist_id, form.ratings.data, form.heading.data, form.comments.data, user_id
+            )
+            if result.status:
+                update_points_query = "UPDATE IS601_Users SET points = points + 5 WHERE id = %s"
+                DB.update(update_points_query, user_id)
+                flash(f"Added a rating", "success")
+        except Exception as e:
+            flash(f"Error adding a rating: {e}", "danger")
+    else:
+        if request.method == "POST":
+            flash("Form has validation errors. Please check the fields.", "danger")
+
+    return render_template("add_ratings.html", form=form, type="Create")
 
 @netflixdata.route("/edit", methods=["GET", "POST"])
 @admin_permission.require(http_exception=403)
@@ -120,6 +147,74 @@ def edit():
         flash("Error fetching netflix record", "danger")
     return render_template("netflixdata_form.html", form=form, type="Edit")
 
+@netflixdata.route("/edit_rating", methods=["GET", "POST"])
+@users_permission.require(http_exception=403)
+def edit_rating():
+    form = RatingsdataForm()
+    id = request.args.get("id")
+    if id is None:
+        flash("Missing ID", "danger")
+        return redirect(url_for("netflixdata.view_my_ratings"))
+
+
+    if request.method == "POST" and form.validate_on_submit() and id:
+        try:
+            # Update the existing stock record in the database
+            result = DB.insertOne(
+                "UPDATE IS601_Ratings SET ratings = %s, heading = %s, comments = %s WHERE id = %s",
+                form.ratings.data, form.heading.data, form.comments.data, id
+            )
+            if result.status:
+                flash(f"Updated rating record", "success")
+        except Exception as e:
+            flash(f"Error updating rating record: {e}", "danger")
+    else:
+        if request.method == "POST":
+            flash("Form has validation errors. Please check the fields.", "danger")
+    try:
+        result = DB.selectOne(
+            "SELECT ratings, heading, comments FROM IS601_Ratings WHERE id = %s",
+            id
+        )
+        if result.status and result.row:
+            form = RatingsdataForm(data=result.row)
+    except Exception as e:
+        flash("Error fetching ratings", "danger")
+    return render_template("edit_ratings.html", form=form, type="Edit")
+
+@netflixdata.route("/admin_edit_rating", methods=["GET", "POST"])
+@admin_permission.require(http_exception=403)
+def admin_edit_rating():
+    form = RatingsdataForm()
+    id = request.args.get("id")
+    if id is None:
+        flash("Missing ID", "danger")
+        return redirect(url_for("netflixdata.view_my_ratings"))
+
+    if request.method == "POST" and form.validate_on_submit() and id:
+        try:
+            # Update the existing stock record in the database
+            result = DB.insertOne(
+                "UPDATE IS601_Ratings SET ratings = %s, heading = %s, comments = %s WHERE id = %s",
+                form.ratings.data, form.heading.data, form.comments.data, id
+            )
+            if result.status:
+                flash(f"Updated rating record", "success")
+        except Exception as e:
+            flash(f"Error updating rating record: {e}", "danger")
+    else:
+        if request.method == "POST":
+            flash("Form has validation errors. Please check the fields.", "danger")
+    try:
+        result = DB.selectOne(
+            "SELECT ratings, heading, comments FROM IS601_Ratings WHERE id = %s", id
+        )
+        if result.status and result.row:
+            form = RatingsdataForm(data=result.row)
+    except Exception as e:
+        flash("Error fetching ratings", "danger")
+    return render_template("edit_ratings.html", form=form, type="Edit")
+
 @netflixdata.route("/list", methods=["GET"])
 def list():
     rows = []
@@ -127,15 +222,99 @@ def list():
 
     query = "SELECT id, title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date FROM IS601_Watchlist WHERE 1=1"
     args = {}
+    
     allowed_columns = ["id", "title", "title_type", "netflix_id", "year", "created", "modified"]
     title = request.args.get("title")
     column = request.args.get("column")  
     order = request.args.get("order")  
     limit = request.args.get("limit", 10) 
+    page = request.args.get("page", 1, type=int) 
 
     if title:
         query += " AND title LIKE %(title)s"
         args["title"] = f"%{title}%"
+
+    if column and order:
+        if column in allowed_columns and order in ["asc", "desc"]:
+            query += f" ORDER BY {column} {order}"
+
+    try:
+        if limit:
+            limit = int(limit)
+            if 1 <= limit <= 100:
+                offset = (page - 1) * limit
+                query += " LIMIT %(offset)s, %(limit)s"
+                args["offset"] = offset
+                args["limit"] = limit
+            else:
+                flash("Limit must be between 1 and 100", "error")
+    except ValueError:
+        flash("Invalid limit value", "error")
+        has_error = True
+
+    if not has_error:
+        try:
+            result = DB.selectAll(query, args)
+            if result.status and result.rows:
+                rows = result.rows
+            else:
+                flash("No record found.", "info")
+        except Exception as e:
+            print(e)
+            flash("Error getting netflix records", "danger")
+
+    total_rows = len(rows)
+    per_page = 10
+    total_pages = (total_rows + per_page - 1) // per_page
+
+    # Get the current page from the request arguments
+    page = request.args.get("page", 1, type=int)
+
+    # Slice the rows based on the current page
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    rows_to_display = rows[start_index:end_index]
+
+    return render_template("netflixdata_list.html", rows=rows_to_display, total_pages=total_pages,
+                           current_page=page, total_rows=total_rows)
+@netflixdata.route("/manage_ratings", methods=["GET"])
+@admin_permission.require(http_exception=403)
+def manage_ratings():
+    title = ""
+    rows = []
+    has_error = False
+    query = """
+        SELECT
+        IS601_Watchlist.id as 'watchlist_id',
+        IS601_Watchlist.title as 'title',
+        (SELECT COUNT(*) FROM IS601_Ratings WHERE IS601_Watchlist.id = IS601_Ratings.watchlist_id) as total_ratings,
+        IS601_Watchlist.created as created,
+        IS601_Watchlist.modified as modified
+        FROM
+        IS601_Watchlist
+        WHERE 1=1
+    """
+
+    args = {}
+    allowed_columns = ["watchlist_id", "title", "total_ratings", "created", "modified"]
+    watchlist_id = request.args.get("watchlist_id")
+    title = request.args.get("title")
+    total_ratings = request.args.get("total_ratings")
+    column = request.args.get("column")  
+    order = request.args.get("order")  
+    limit = request.args.get("limit", 10) 
+
+    if watchlist_id:
+        query += " AND IS601_Watchlist.id = %(watchlist_id)s"
+        args["watchlist_id"] = watchlist_id
+
+    if total_ratings:
+        query += " AND (SELECT COUNT(*) FROM IS601_Ratings WHERE IS601_Watchlist.id = IS601_Ratings.watchlist_id) = %(total_ratings)s"
+        args["total_ratings"] = total_ratings
+
+    if title:
+        query += " AND IS601_Watchlist.title = %(title)s"
+        args["title"] = title
 
     if column and order:
         if column in allowed_columns and order in ["asc", "desc"]:
@@ -161,9 +340,20 @@ def list():
                 flash("No record found.","info")
         except Exception as e:
             print(e)
-            flash("Error getting netflix records", "danger")
+            flash("Error getting netflix ratings", "danger")
+        total_rows = len(rows)
+    per_page = 10
+    total_pages = (total_rows + per_page - 1) // per_page
 
-    return render_template("netflixdata_list.html", rows=rows)
+    # Get the current page from the request arguments
+    page = request.args.get("page", 1, type=int)
+
+    # Slice the rows based on the current page
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    rows_to_display = rows[start_index:end_index]
+
+    return render_template("manage_ratings.html", rows=rows_to_display,  total_pages=total_pages, current_page=page, total_rows=total_rows)
 
 @netflixdata.route("/delete", methods=["GET"])
 @admin_permission.require(http_exception=403)
@@ -182,6 +372,49 @@ def delete():
     else:
         flash("No ID present", "warning")
     return redirect(url_for("netflixdata.list", **args))
+
+@netflixdata.route("/delete_rating", methods=["GET"])
+@users_permission.require(http_exception=403)
+def delete_rating():
+    id = request.args.get("id")
+    args = {**request.args}
+    if id:
+        try:
+            user_id_result = DB.selectOne("SELECT user_id FROM IS601_Ratings WHERE id = %s", id)
+            if user_id_result.status and user_id_result.row:
+                user_id = user_id_result.row.get("user_id")
+            # Delete the rating from the database
+            result = DB.delete("DELETE FROM IS601_Ratings WHERE id = %s", id)
+            if result.status:
+                update_points_query = "UPDATE IS601_Users SET points = GREATEST(0, points - 5) WHERE id = %s"
+                DB.update(update_points_query, user_id)
+                flash("Deleted rating", "success")
+        except Exception as e:
+            flash(f"Error deleting rating: {e}", "danger")
+        del args["id"]
+    else:
+        flash("No ID present", "warning")
+    return redirect(url_for("netflixdata.view_my_ratings", **args))
+
+@netflixdata.route("/delete_all", methods=["GET"])
+@users_permission.require(http_exception=403)
+def delete_all():
+    user_id = current_user.get_id()
+    args = {**request.args}
+    if user_id:
+        try:
+            # Delete all the ratings from the database
+            result = DB.delete("DELETE FROM IS601_Ratings WHERE user_id = %s", user_id)
+            if result.status:
+                update_points_query = "UPDATE IS601_Users SET points = 0 WHERE id = %s"
+                DB.update(update_points_query, user_id)
+                flash("Deleted all ratings", "success")
+        except Exception as e:
+            flash(f"Error deleting ratings: {e}", "danger")
+        # del args["user_id"]
+    else:
+        flash("No ID present", "warning")
+    return redirect(url_for("netflixdata.view_my_ratings", **args))
 
 @netflixdata.route("/view", methods=["GET"])
 @users_permission.require(http_exception=403)
@@ -204,7 +437,7 @@ def view():
         IS601_Ratings
         LEFT JOIN
         IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
-        WHERE 1=1
+        WHERE IS601_Ratings.watchlist_id=1
     """
 
     args = {}
@@ -218,12 +451,9 @@ def view():
     order = request.args.get("order")
     limit = request.args.get("limit",10)
     
-
-
-    if watchlist_id:
-        query += " AND IS601_Ratings.watchlist_id = %(watchlist_id)s"
-        args["watchlist_id"] = watchlist_id
-
+    if ratings:
+        query += " AND IS601_Ratings.ratings = %(ratings)s"
+        args["ratings"] = ratings
 
     if column and order:
         if column in allowed_columns and order in ["asc", "desc"]:
@@ -244,7 +474,7 @@ def view():
 
     if not has_error:
         try:
-            result = DB.selectAll(query, args)
+            result = DB.selectAll("SELECT IS601_Ratings.id as 'id', IS601_Ratings.watchlist_id as 'watchlist_id', IS601_Ratings.ratings as 'ratings', IS601_Ratings.heading as 'heading', IS601_Ratings.comments as 'comments', IS601_Watchlist.title as 'title', IS601_Ratings.created as created, IS601_Ratings.modified as modified FROM IS601_Ratings LEFT JOIN IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id WHERE IS601_Ratings.watchlist_id=%s", watchlist_id)
             if result.status:
                 rows = result.rows
                 # print(f"rows: {rows}")
@@ -268,4 +498,232 @@ def view():
         title = ""  
 
     return render_template("netflixdata_view.html", title=title, rows=rows, allowed_columns=allowed_columns)
+
+@netflixdata.route("/view_by_title", methods=["GET"])
+@admin_permission.require(http_exception=403)
+def view_by_title():
+    rows = []
+    title = ""
+    has_error = False
+
+    query = """
+        SELECT
+        IS601_Ratings.id as 'id',
+        IS601_Ratings.watchlist_id as 'watchlist_id',
+        IS601_Ratings.user_id as 'user_id' ,
+        IS601_Users.username as 'username' ,
+        IS601_Ratings.ratings as 'ratings',
+        IS601_Ratings.heading as 'heading',
+        IS601_Ratings.comments as 'comments',
+        IS601_Watchlist.title as 'title',
+        IS601_Ratings.created as created,
+        IS601_Ratings.modified as modified
+        FROM
+        IS601_Ratings
+        LEFT JOIN
+        IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
+        LEFT JOIN 
+        IS601_Users ON IS601_Ratings.user_id = IS601_Users.id
+        WHERE IS601_Ratings.watchlist_id = '{watchlist_id}'
+    """
+
+    args = {} # <--- add values to replace %s/%(named)s placeholders
+    allowed_columns = ["user_id","username", "ratings", "heading", "comments", "created", "modified"]
     
+    id = request.args.get("id")
+    watchlist_id = request.args.get("watchlist_id")
+    ratings = request.args.get("ratings")
+    heading = request.args.get("heading")
+    comments = request.args.get("comments")
+    user_id = request.args.get("user_id")
+    username = request.args.get("username")
+    column = request.args.get("column")  
+    order = request.args.get("order")  
+    limit = request.args.get("limit", 10) 
+    
+    if user_id:
+        query += " AND IS601_Ratings.user_id = %(user_id)s"
+        args["user_id"] = user_id
+
+    if username:
+        query += " AND IS601_Users.username = %(username)s"
+        args["username"] = username
+
+    if ratings:
+        query += " AND IS601_Ratings.ratings = %(ratings)s"
+        args["ratings"] = ratings
+
+    if column and order:
+        if column in allowed_columns and order in ["asc", "desc"]:
+            query += f" ORDER BY {column} {order}"
+
+    try:
+        if limit:
+            limit = int(limit)
+            if 1 <= limit <= 100:
+                query += " LIMIT %(limit)s"
+                args["limit"] = limit
+            else:
+                flash("Limit must be between 1 and 100", "error")
+    except ValueError:
+        flash("Invalid limit value", "error")
+        has_error = True
+    
+    #print("query",query)
+    #print("args", args)
+
+    if not has_error:
+        try:
+            result = DB.selectAll("SELECT IS601_Ratings.id as 'id', IS601_Ratings.watchlist_id as 'watchlist_id', IS601_Ratings.user_id as 'user_id' ,IS601_Users.username as 'username', IS601_Ratings.ratings as 'ratings', IS601_Ratings.heading as 'heading', IS601_Ratings.comments as 'comments', IS601_Ratings.created as created, IS601_Ratings.modified as modified FROM IS601_Ratings LEFT JOIN IS601_Users ON IS601_Ratings.user_id = IS601_Users.id WHERE IS601_Ratings.watchlist_id=%s", watchlist_id)
+            if result.status:
+                rows = result.rows
+                # print(f"rows: {rows}")
+            else:
+                flash("Error retrieving records. Please try again.", "error")
+        except Exception as e:
+            flash("An unexpected error occured. Please try again later.", "error")
+
+    if watchlist_id:
+        try:
+            result = DB.selectOne("SELECT title FROM IS601_Watchlist WHERE id = %s", watchlist_id)
+            if result.status:
+                watchlist_id = result.row.get("id")
+                title = result.row.get("title")
+            else:
+                flash("An error occurred while fetching title. Please try again later.", "error")
+        except Exception as e:
+            print(f"Title name fetch error {e}")
+            flash("An error occurred while fetching title name. Please try again later.", "danger")
+    else:
+        title = ""  
+
+    return render_template("view_by_title.html", title=title, rows=rows, allowed_columns=allowed_columns)
+
+### UCID: krs
+### Date: 12/05/23
+@netflixdata.route("/view_my_ratings", methods=["GET"])
+@users_permission.require(http_exception=403)
+def view_my_ratings():
+    user_id = current_user.get_id()
+    rows = []
+    title = ""
+    has_error = False
+
+    query = """
+        SELECT
+        IS601_Ratings.id as 'id',
+        IS601_Ratings.watchlist_id as 'watchlist_id',
+        IS601_Watchlist.title as 'title',
+        IS601_Ratings.ratings as 'ratings',
+        IS601_Ratings.heading as 'heading',
+        IS601_Ratings.comments as 'comments',
+        IS601_Ratings.created as created,
+        IS601_Ratings.modified as modified
+        FROM
+        IS601_Ratings
+        LEFT JOIN
+        IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id
+        WHERE IS601_Ratings.user_id=%s
+    """
+
+    args = {}
+    allowed_columns = ["id", "watchlist_id", "title", "ratings", "heading", "comments", "created", "modified"]
+    watchlist_id = request.args.get("watchlist_id")
+    id = request.args.get("id")
+    ratings = request.args.get("ratings")
+    heading = request.args.get("heading")
+    comments = request.args.get("comments")
+    column = request.args.get("column")
+    order = request.args.get("order")
+    limit = request.args.get("limit",10)
+    
+
+
+    if ratings:
+        query += " AND IS601_Ratings.ratings = %(ratings)s"
+        args["ratings"] = ratings
+
+    if watchlist_id:
+        query += " AND IS601_Ratings.watchlist_id = %(watchlist_id)s"
+        args["watchlist_id"] = watchlist_id
+
+    if column and order:
+        if column in allowed_columns and order in ["asc", "desc"]:
+            query += f" ORDER BY {column} {order}"
+
+
+    try:
+        if limit:
+            limit = int(limit)
+            if 1 <= limit <= 100:
+                query += " LIMIT %(limit)s"
+                args["limit"] = limit
+            else:
+                flash("Limit must be between 1 and 100", "error")
+    except ValueError:
+        flash("Invalid limit value", "error")
+        has_error = True
+
+    if not has_error:
+        try:
+            result = DB.selectAll("SELECT IS601_Ratings.id as 'id', IS601_Ratings.watchlist_id as 'watchlist_id', IS601_Watchlist.title as 'title', IS601_Ratings.ratings as 'ratings', IS601_Ratings.heading as 'heading', IS601_Ratings.comments as 'comments', IS601_Ratings.created as created, IS601_Ratings.modified as modified FROM IS601_Ratings LEFT JOIN IS601_Watchlist ON IS601_Ratings.watchlist_id = IS601_Watchlist.id WHERE IS601_Ratings.user_id=%s", user_id)
+            if result.status:
+                rows = result.rows
+                # print(f"rows: {rows}")
+            else:
+                flash("Error retrieving rating. Please try again.", "error")
+        except Exception as e:
+            flash("An unexpected error occured. Please try again later.", "error")
+        
+    if watchlist_id:
+        try:
+            result = DB.selectOne("SELECT title FROM IS601_Watchlist WHERE id = %s", watchlist_id)
+            if result.status:
+                watchlist_id = result.row.get("id")
+                title = result.row.get("title")
+            else:
+                flash("An error occurred while fetching title. Please try again later.", "error")
+        except Exception as e:
+            print(f"Title name fetch error {e}")
+            flash("An error occurred while fetchingtitle name. Please try again later.", "danger")
+    else:
+        title = ""  
+
+    total_rows = len(rows)
+    per_page = 10
+    total_pages = (total_rows + per_page - 1) // per_page
+
+    # Get the current page from the request arguments
+    page = request.args.get("page", 1, type=int)
+
+    # Slice the rows based on the current page
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    rows_to_display = rows[start_index:end_index]
+
+    return render_template("view_my_ratings.html", title=title, rows=rows_to_display, allowed_columns=allowed_columns, total_pages=total_pages,
+                           current_page=page, total_rows=total_rows)  
+
+@netflixdata.route("/user_profile", methods=["GET"])
+def user_profile():
+    username = request.args.get("username")
+    rows = []
+    has_error = False
+
+    query = "SELECT id, email, username, points FROM IS601_Users WHERE username=%s",username
+    args = {}
+    allowed_columns = ["id", "email", "username", "points", "created", "modified"]
+
+    if not has_error:
+        try:
+            result = DB.selectAll( "SELECT id, email, username, points FROM IS601_Users WHERE username=%s",username)
+            print(result)
+            if result.status and result.rows:
+                rows = result.rows
+            else:
+                flash("No record found.","info")
+        except Exception as e:
+            print(e)
+            flash("Error getting profile info", "danger")
+
+    return render_template("netflixdata_profile.html", rows=rows, username=username, allowed_columns=allowed_columns)

@@ -1,30 +1,39 @@
 {% extends "layout.html" %}
-{% block title %}Netflix Data{% endblock %}
+{% block title %}Manage Ratings{% endblock %}
 
 <!-- content -->
 {% block content %}
 {% from "_table_helper.html" import render_table %}
 {% from "sort_filter.html" import sort_filter %}
 {% set view = "netflixdata.view" %}
-{% set edit = "netflixdata.edit" %}
-{% set delete = "netflixdata.delete" %}
+
 <div class="container-fluid">
-    <div class="h1 text-center">Netflix Content</div>
+    <div class="h1 text-center">Manage Ratings</div>
     <form method="GET">
         <div class="row">
-            <!--title name-->
+
             <div class="col">
-                <label class="visually-hidden" for="title">title name</label>
-                <input type="text" class="form-control" id="title" name="title"
-                       placeholder="title name" value="{{ request.args.get('title') or ''}}">
+                <label class="visually-hidden" for="watchlist_id">watchlist_id</label>
+                <input type="text" class="form-control" id="watchlist_id" name="watchlist_id"
+                       placeholder="watchlist_id" value="{{ request.args.get('watchlist_id') or ''}}">
             </div>
-          
+
+            <div class="col">
+                <label class="visually-hidden" for="title">title</label>
+                <input type="text" class="form-control" id="title" name="title"
+                       placeholder="title" value="{{ request.args.get('title') or ''}}">
+            </div>
+
+            <div class="col">
+                <label class="visually-hidden" for="total_ratings">total_ratings</label>
+                <input type="text" class="form-control" id="total_ratings" name="total_ratings"
+                       placeholder="total_ratings" value="{{ request.args.get('total_ratings') or ''}}">
+            </div>
+
             <!-- sort filter -->
             {{ sort_filter(cols=[
-                ("title", "Title Name"),
-                ("title_type", "Title Type"),
-                ("netflix_id", "Netflix ID"),
-                ("year", "Release Year"),
+                ("watchlist_id", "Watchlist ID"),
+                ("title", "Title"),
                 ("modified", "Modified"),
                 ("created", "Created")
             ]) }}            
@@ -49,11 +58,16 @@
             {% if rows and rows|length > 0 %}
             <thead>
                 <tr class="text-capitalize">
-                    <!-- generate th tags for each column to display -->
+                    {# generate th tags for each column to display #}
+                    {# don't show any id or organization_id columns #}
+                    {# IMPORTANT use table column names as the headings, replace _ with space via filter #}
+                    <!-- add th elements -->
                     {% for r in rows[0] %}
-                        {% if r not in ['id', 'modified', 'created'] %}
-                            <th>{{ r }}</th>
-                        {% endif %}
+                    {% if r == 'title' %}
+                        <th>Title</th>
+                    {% elif r not in ['modified', 'created'] %}
+                        <th>{{ r }}</th>
+                    {% endif %}
                     {% endfor %}
                     <!-- keep this -->
                     <th>Actions</th>
@@ -62,22 +76,19 @@
             <tbody>
                 <!-- iterate over rows and generate proper tr and td elements with the data -->
                 {% for r in rows %}
-                    <tr>
-                        {% for key, value in r.items() %}
-                            {% if key not in ['id', 'modified', 'created'] %}
-                                <td>{{ value }}</td> 
-                            {% endif %}
-                        {% endfor %}   
-                        <td>
-                            <a href="{{ url_for('netflixdata.view', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">View Ratings</a>
-                            <a href="{{ url_for('netflixdata.add_ratings', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">Add</a>
-                            <a href="{{ url_for('netflixdata.edit', id=r.get('id')) }}" class="btn btn-danger btn-sm">Edit</a>
-                            <a href="{{ url_for('netflixdata.delete', id=r.get('id'), **request.args) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete?')">Delete</a>
-                        </td>
-                    </tr>
+                <tr>
+                    {% for key,value in r.items() %}
+                        {% if key not in ['modified', 'created'] %}
+                            <td>{{value}}</td> 
+                        {% endif %}
+                    {% endfor %}   
+                    <td>
+                        <a href="{{ url_for('netflixdata.view_by_title', watchlist_id=r.get('watchlist_id')) }}" class="btn btn-secondary btn-sm">All Ratings</a>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
-            </table>
+        </table>
             <div class="d-flex justify-content-center mt-3">
                 {% if total_pages > 1 %}
                     <nav aria-label="Page navigation">
@@ -99,14 +110,15 @@
                     Page {{ current_page }}/{{ total_pages }}
                 </div>
             </div>
-           {% else %}
-            <!-- Display a message if there are no results -->
+            {% else %}
             <tbody>
                 <tr>
                     <td colspan="100%">No results to show</td>
                 </tr>
             </tbody>
-        {% endif %}
+            {% endif %}
+        
     </div>
+
 </div>
 {% endblock %}
