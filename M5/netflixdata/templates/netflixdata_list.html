@@ -18,7 +18,6 @@
                 <input type="text" class="form-control" id="title" name="title"
                        placeholder="title name" value="{{ request.args.get('title') or ''}}">
             </div>
-
           
             <!-- sort filter -->
             {{ sort_filter(cols=[
@@ -50,59 +49,64 @@
             {% if rows and rows|length > 0 %}
             <thead>
                 <tr class="text-capitalize">
-                    {# generate th tags for each column to display #}
-                    {# don't show any id or organization_id columns #}
-                    {# IMPORTANT use table column names as the headings, replace _ with space via filter #}
-                    <!-- add th elements -->
+                    <!-- generate th tags for each column to display -->
                     {% for r in rows[0] %}
-                    {% if r == 'organization_name' %}
-                        <!-- <th>Organization Name</th> -->
-                    {% elif r not in ['id', 'modified', 'created'] %}
-                        <th>{{ r }}</th>
-                    {% endif %}
+                        {% if r not in ['id', 'modified', 'created'] %}
+                            <th>{{ r }}</th>
+                        {% endif %}
                     {% endfor %}
                     <!-- keep this -->
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {# generate tr with td tags for each piece of data #}
-                {# don't show any id or organization_id columns #}
-                {# if the td is for website, display it as a link where the text is "website" and the url is the
-                website url #}
-                {# in the last column add the following
-                a view button that passes the organization id to donation search (this will be an organization's donation
-                list)
-                an edit button that passes the organization id to organization edit
-                a delete button that passes the organization id and the request args to the organization delete route
-                #}
                 <!-- iterate over rows and generate proper tr and td elements with the data -->
                 {% for r in rows %}
-                <tr>
-                    {% for key,value in r.items() %}
-                        {% if key not in ['id', 'modified', 'created'] %}
-                            <td>{{value}}</td> 
-                        {% endif %}
-                    {% endfor %}   
-                    <td>
-                        <a href="{{ url_for('netflixdata.view', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">View Ratings</a>
-                        <a href="{{ url_for('netflixdata.add_ratings', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">Add</a>
-                        <a href="{{ url_for('netflixdata.edit', id=r.get('id')) }}" class="btn btn-danger btn-sm">Edit</a>
-                        <a href="{{ url_for('netflixdata.delete', id=r.get('id'), **request.args) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete?')">Delete</a>
-                    </td>
-                </tr>
+                    <tr>
+                        {% for key, value in r.items() %}
+                            {% if key not in ['id', 'modified', 'created'] %}
+                                <td>{{ value }}</td> 
+                            {% endif %}
+                        {% endfor %}   
+                        <td>
+                            <a href="{{ url_for('netflixdata.view', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">View Ratings</a>
+                            <a href="{{ url_for('netflixdata.add_ratings', watchlist_id=r.get('id')) }}" class="btn btn-secondary btn-sm">Add</a>
+                            <a href="{{ url_for('netflixdata.edit', id=r.get('id')) }}" class="btn btn-danger btn-sm">Edit</a>
+                            <a href="{{ url_for('netflixdata.delete', id=r.get('id'), **request.args) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete?')">Delete</a>
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
-            {% else %}
+            </table>
+            <div class="d-flex justify-content-center mt-3">
+                {% if total_pages > 1 %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            {% for num in range(1, total_pages + 1) %}
+                                <li class="page-item {% if num == current_page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('netflixdata.list', page=num, title=request.args.get('title'), column=request.args.get('column'), order=request.args.get('order'), limit=request.args.get('limit')) }}">{{ num }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+            <div class="d-flex justify-content-between mt-3">
+                <div class="text-muted mt-3">
+                    Showing {{ rows|length }}/{{ total_rows }} records
+                </div>
+                <div class="text-muted">
+                    Page {{ current_page }}/{{ total_pages }}
+                </div>
+            </div>
+           {% else %}
+            <!-- Display a message if there are no results -->
             <tbody>
                 <tr>
                     <td colspan="100%">No results to show</td>
                 </tr>
             </tbody>
-            {% endif %}
-        </table>
+        {% endif %}
     </div>
-   
-
 </div>
 {% endblock %}

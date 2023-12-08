@@ -87,6 +87,31 @@ def add_ratings():
 
     return render_template("add_ratings.html", form=form, type="Create")
 
+@netflixdata.route("/admin_add_rating", methods=["GET", "POST"])
+@admin_permission.require(http_exception=403)
+def admin_add_rating():
+    user_id = request.args.get("user_id")
+    watchlist_id = request.args.get("watchlist_id")
+    form = RatingsdataForm()    
+    if request.method == "POST" and form.validate_on_submit():
+        try:
+            # Create a new rating in the database
+            result = DB.insertOne(
+                "INSERT INTO IS601_Ratings (watchlist_id, ratings, heading, comments, user_id) VALUES (%s, %s, %s, %s, %s)",
+                watchlist_id, form.ratings.data, form.heading.data, form.comments.data, user_id
+            )
+            if result.status:
+                update_points_query = "UPDATE IS601_Users SET points = points + 5 WHERE id = %s"
+                DB.update(update_points_query, user_id)
+                flash(f"Added a rating", "success")
+        except Exception as e:
+            flash(f"Error adding a rating: {e}", "danger")
+    else:
+        if request.method == "POST":
+            flash("Form has validation errors. Please check the fields.", "danger")
+
+    return render_template("add_ratings.html", form=form, type="Create")
+
 @netflixdata.route("/edit", methods=["GET", "POST"])
 @admin_permission.require(http_exception=403)
 def edit():
@@ -197,11 +222,13 @@ def list():
 
     query = "SELECT id, title, title_type, netflix_id, synopsis, `year`, imdb_id, title_date FROM IS601_Watchlist WHERE 1=1"
     args = {}
+    
     allowed_columns = ["id", "title", "title_type", "netflix_id", "year", "created", "modified"]
     title = request.args.get("title")
     column = request.args.get("column")  
     order = request.args.get("order")  
     limit = request.args.get("limit", 10) 
+    page = request.args.get("page", 1, type=int) 
 
     if title:
         query += " AND title LIKE %(title)s"
@@ -215,26 +242,41 @@ def list():
         if limit:
             limit = int(limit)
             if 1 <= limit <= 100:
-                query += " LIMIT %(limit)s"
+                offset = (page - 1) * limit
+                query += " LIMIT %(offset)s, %(limit)s"
+                args["offset"] = offset
                 args["limit"] = limit
             else:
                 flash("Limit must be between 1 and 100", "error")
     except ValueError:
         flash("Invalid limit value", "error")
         has_error = True
+
     if not has_error:
         try:
-            result = DB.selectAll(query,args)
+            result = DB.selectAll(query, args)
             if result.status and result.rows:
                 rows = result.rows
             else:
-                flash("No record found.","info")
+                flash("No record found.", "info")
         except Exception as e:
             print(e)
             flash("Error getting netflix records", "danger")
 
-    return render_template("netflixdata_list.html", rows=rows)
+    total_rows = len(rows)
+    per_page = 10
+    total_pages = (total_rows + per_page - 1) // per_page
 
+    # Get the current page from the request arguments
+    page = request.args.get("page", 1, type=int)
+
+    # Slice the rows based on the current page
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    rows_to_display = rows[start_index:end_index]
+
+    return render_template("netflixdata_list.html", rows=rows_to_display, total_pages=total_pages,
+                           current_page=page, total_rows=total_rows)
 @netflixdata.route("/manage_ratings", methods=["GET"])
 @admin_permission.require(http_exception=403)
 def manage_ratings():
@@ -299,8 +341,19 @@ def manage_ratings():
         except Exception as e:
             print(e)
             flash("Error getting netflix ratings", "danger")
+        total_rows = len(rows)
+    per_page = 10
+    total_pages = (total_rows + per_page - 1) // per_page
 
-    return render_template("manage_ratings.html", rows=rows)
+    # Get the current page from the request arguments
+    page = request.args.get("page", 1, type=int)
+
+    # Slice the rows based on the current page
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    rows_to_display = rows[start_index:end_index]
+
+    return render_template("manage_ratings.html", rows=rows_to_display,  total_pages=total_pages, current_page=page, total_rows=total_rows)
 
 @netflixdata.route("/delete", methods=["GET"])
 @admin_permission.require(http_exception=403)
@@ -339,6 +392,26 @@ def delete_rating():
         except Exception as e:
             flash(f"Error deleting rating: {e}", "danger")
         del args["id"]
+    else:
+        flash("No ID present", "warning")
+    return redirect(url_for("netflixdata.view_my_ratings", **args))
+
+@netflixdata.route("/delete_all", methods=["GET"])
+@users_permission.require(http_exception=403)
+def delete_all():
+    user_id = current_user.get_id()
+    args = {**request.args}
+    if user_id:
+        try:
+            # Delete all the ratings from the database
+            result = DB.delete("DELETE FROM IS601_Ratings WHERE user_id = %s", user_id)
+            if result.status:
+                update_points_query = "UPDATE IS601_Users SET points = 0 WHERE id = %s"
+                DB.update(update_points_query, user_id)
+                flash("Deleted all ratings", "success")
+        except Exception as e:
+            flash(f"Error deleting ratings: {e}", "danger")
+        # del args["user_id"]
     else:
         flash("No ID present", "warning")
     return redirect(url_for("netflixdata.view_my_ratings", **args))
@@ -616,7 +689,20 @@ def view_my_ratings():
     else:
         title = ""  
 
-    return render_template("view_my_ratings.html", title=title, rows=rows, allowed_columns=allowed_columns)  
+    total_rows = len(rows)
+    per_page = 10
+    total_pages = (total_rows + per_page - 1) // per_page
+
+    # Get the current page from the request arguments
+    page = request.args.get("page", 1, type=int)
+
+    # Slice the rows based on the current page
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    rows_to_display = rows[start_index:end_index]
+
+    return render_template("view_my_ratings.html", title=title, rows=rows_to_display, allowed_columns=allowed_columns, total_pages=total_pages,
+                           current_page=page, total_rows=total_rows)  
 
 @netflixdata.route("/user_profile", methods=["GET"])
 def user_profile():

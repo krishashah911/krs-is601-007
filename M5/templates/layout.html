@@ -33,6 +33,24 @@
             font-size: 20px; /* Adjust the font size as needed */
             color: gold; /* Default star color */
         }
+
+        .pagination .page-link {
+    color: black;
+}
+
+/* Override Bootstrap active pagination link color and text color */
+.pagination .page-item.active .page-link {
+    background-color: black;
+    border-color: black;
+    color: white; /* Set text color for active link */
+}
+
+/* Override Bootstrap hover state for pagination links */
+.pagination .page-item:not(.disabled):hover .page-link {
+    background-color: #222; /* Darker shade for hover effect */
+    border-color: black;
+    color: white; /* Set text color for hover state */
+}
     </style>
     <title>{% block title %}{% endblock %} - Netflix</title>
     {% endblock %}
@@ -52,7 +70,9 @@
     <br>
 
     <div id="content" class="overflow-auto" style="height: 84vh">
-        {% block content %}{% endblock %}</div>
+        {% block content %}{% endblock %}
+    </div>
+    
     <br>
     <br>
     <br>
